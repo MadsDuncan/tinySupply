@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "main.c" "console.c" "usb_composite.c"
+    SRCS "main.c" "console.c" "usb_composite.c" "encoder.c"
     INCLUDE_DIRS "."
     PRIV_REQUIRES fatfs wear_levelling esp_partition console
 )

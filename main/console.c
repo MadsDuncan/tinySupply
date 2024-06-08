@@ -1,7 +1,11 @@
+#include "encoder.h"
 #include "esp_console.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "usb_composite.h"
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "console.h"
 
@@ -49,9 +53,55 @@ static void register_msc_commands() {
     ESP_ERROR_CHECK(esp_console_cmd_register(&cmd_test));
 }
 
+uint32_t enc_0_test_var = 100;
+uint32_t enc_1_test_var = 10;
+
+static int enc_test(int argc, char **argv) {
+    printf("Encoder test\n");
+    encoder_register_var(ENCODER_0, &enc_0_test_var, 10, 0, 200);
+    encoder_register_var(ENCODER_1, &enc_1_test_var, 2, 5, 20);
+
+    uint32_t iterations = 1;
+
+    // At least 1 argument
+    if (argc > 1) {
+        iterations = atoi(argv[1]);
+        if (iterations == 0) {
+            printf("Invalid 1st argument: %s\n", argv[1]);
+            return 1;
+        }
+    }
+
+    for (uint32_t i = 0; i < iterations; i++) {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        printf("Encoder      0      1\n");
+        printf("---------------------\n");
+        printf("btn        %3d    %3d\n", (int)encoder_get_btn(ENCODER_0),         (int)encoder_get_btn(ENCODER_1));
+        printf("btn_sticky %3d    %3d\n", (int)encoder_get_btn_sticky(ENCODER_0),  (int)encoder_get_btn_sticky(ENCODER_1));
+        printf("dir_sticky %3d    %3d\n", (int)encoder_get_dir_sticky(ENCODER_0),  (int)encoder_get_dir_sticky(ENCODER_1));
+        printf("test_var   %3d    %3d\n", (int)enc_0_test_var,                     (int)enc_1_test_var);
+        printf("\n");        
+    }
+
+    encoder_unregister_var(ENCODER_0);
+    encoder_unregister_var(ENCODER_1);
+    return 0;
+}
+
+static void register_enc_commands() {
+    const esp_console_cmd_t cmd_test = {
+        .command = "enc_test",
+        .help = "Encoder test",
+        .hint = NULL,
+        .func = &enc_test,
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&cmd_test));
+}
+
 void console_setup() {
     esp_console_register_help_command();
     register_msc_commands();
+    register_enc_commands();
 
     esp_console_repl_t *repl = NULL;
     esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();

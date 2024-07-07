@@ -1,5 +1,28 @@
+set(srcs 
+    "console.c"
+    "encoder.c"
+    "main.c"
+    "usb_composite.c"
+    "display/display.c"
+)
+
+set(include_dirs 
+    "."
+    "display"
+)
+
+set(priv_requires
+    "console"
+    "esp_partition"
+    "esp_timer"
+    "fatfs"
+    "lvgl"
+    "lvgl_esp32_drivers"
+    "wear_levelling"
+)
+
 idf_component_register(
-    SRCS "main.c" "console.c" "usb_composite.c" "encoder.c"
-    INCLUDE_DIRS "."
-    PRIV_REQUIRES fatfs wear_levelling esp_partition console
+    SRCS "${srcs}"
+    INCLUDE_DIRS "${include_dirs}"
+    PRIV_REQUIRES "${priv_requires}"
 )

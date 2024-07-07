@@ -1,3 +1,4 @@
+#include "display.h"
 #include "encoder.h"
 #include "esp_console.h"
 #include "freertos/FreeRTOS.h"
@@ -9,6 +10,9 @@
 
 #include "console.h"
 
+/************************************************
+ *      USB MSC commands
+ ***********************************************/
 static int msc_mount(int argc, char **argv) {
     printf("Mounting internal storage to PC\n");
     usb_comp_msc_mount();
@@ -53,6 +57,9 @@ static void register_msc_commands() {
     ESP_ERROR_CHECK(esp_console_cmd_register(&cmd_test));
 }
 
+/************************************************
+ *      Encoder commands
+ ***********************************************/
 uint32_t enc_0_test_var = 100;
 uint32_t enc_1_test_var = 10;
 
@@ -98,10 +105,47 @@ static void register_enc_commands() {
     ESP_ERROR_CHECK(esp_console_cmd_register(&cmd_test));
 }
 
+/************************************************
+ *      Display commands
+ ***********************************************/
+static int disp_start_test(int argc, char **argv) {
+    printf("Starting LVGL display demo\n");
+    display_start_demo();
+    return 0;
+}
+
+static int disp_stop_test(int argc, char **argv) {
+    printf("Stopping LVGL display demo\n");
+    display_stop_demo();
+    return 0;
+}
+
+static void register_disp_commands() {
+    const esp_console_cmd_t cmd_start = {
+        .command = "disp_test",
+        .help = "Start LVGL display demo",
+        .hint = NULL,
+        .func = &disp_start_test,
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&cmd_start));
+
+    const esp_console_cmd_t cmd_stop = {
+        .command = "disp_test_stop",
+        .help = "Stop LVGL display demo",
+        .hint = NULL,
+        .func = &disp_stop_test,
+    };
+    ESP_ERROR_CHECK(esp_console_cmd_register(&cmd_stop));
+}
+
+/************************************************
+ *      Public functions
+ ***********************************************/
 void console_setup() {
     esp_console_register_help_command();
     register_msc_commands();
     register_enc_commands();
+    register_disp_commands();
 
     esp_console_repl_t *repl = NULL;
     esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();

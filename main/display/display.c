@@ -1,19 +1,14 @@
+#include "demos/lv_demos.h"
 #include "display.h"
-#include <stdint.h>
-
-// TODO check which of these are needed
-//#include "esp_freertos_hooks.h"
-//#include "esp_system.h"
-//#include "driver/gpio.h"
-
+#include "esp_log.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
-#include "sdkconfig.h"
 #include "lvgl.h"
 #include "lvgl_helpers.h"
-#include "demos/lv_demos.h"
+#include "sdkconfig.h"
+#include <stdint.h>
 
 #define TAG "display"
 #define LV_TICK_PERIOD_MS 1
@@ -23,6 +18,9 @@
  * you should lock on the very same semaphore! */
 SemaphoreHandle_t xGuiSemaphore;
 
+/************************************************
+ *      Setup
+ ***********************************************/
 static void lv_tick_task(void *arg) {
     (void) arg;
 
@@ -137,59 +135,176 @@ void display_setup() {
     xTaskCreatePinnedToCore(guiTask, "gui", 4096*2, NULL, 0, NULL, 1);
 }
 
-void display_start_demo(void) {
+/************************************************
+ *      Demos
+ ***********************************************/
+static uint8_t active_demo = DISPLAY_DEMO_NONE;
+
+static lv_style_t style0, style1;
+static lv_obj_t *scr = NULL;
+static lv_obj_t *obj = NULL;
+static lv_timer_t *timer = NULL;
+
+static void hello_world_demo() {
+    scr = lv_disp_get_scr_act(NULL);
+    obj =  lv_label_create(scr);
+    lv_label_set_text(obj, "Hello\nworld");
+    lv_obj_align(obj, LV_ALIGN_CENTER, 0, 0);
+}
+
+static void full_screen_demo_cb() {
+    static bool switch_color = false;
+    switch_color = !switch_color;
+
+    if (switch_color) {
+        lv_obj_remove_style(scr, &style0, LV_PART_ANY | LV_STATE_ANY);
+        lv_obj_add_style(scr, &style1, 0);
+    } else {
+        lv_obj_remove_style(scr, &style1, LV_PART_ANY | LV_STATE_ANY);
+        lv_obj_add_style(scr, &style0, 0);
+    }
+}
+
+static void full_screen_demo() {
+    lv_style_init(&style0);
+    lv_style_set_bg_color(&style0, lv_color_hex(0xffffff));
+    lv_style_set_text_color(&style0, lv_color_hex(0x000000));
+
+    lv_style_init(&style1);
+    lv_style_set_bg_color(&style1, lv_color_hex(0x000000));
+    lv_style_set_text_color(&style1, lv_color_hex(0xffffff));
+
+    scr = lv_disp_get_scr_act(NULL);
+    obj =  lv_label_create(scr);
+    lv_label_set_text(obj, "Hello\nworld");
+    lv_obj_align(obj, LV_ALIGN_CENTER, 0, 0);
+
+    lv_obj_add_style(scr, &style0, 0);
+
+    timer = lv_timer_create(full_screen_demo_cb, 2000, NULL);    
+}
+
+static void thin_rect_demo_cb() {
+    static bool switch_color = false;
+    switch_color = !switch_color;
+
+    if (switch_color) {
+        lv_obj_remove_style(obj, &style0, LV_PART_ANY | LV_STATE_ANY);
+        lv_obj_add_style(obj, &style1, 0);
+    } else {
+        lv_obj_remove_style(obj, &style1, LV_PART_ANY | LV_STATE_ANY);
+        lv_obj_add_style(obj, &style0, 0);
+    }
+}
+
+static void thin_rect_demo() {
+    lv_style_init(&style0);
+    lv_style_set_bg_color(&style0, lv_color_hex(0x00ff00));
+
+    lv_style_init(&style1);
+    lv_style_set_bg_color(&style1, lv_color_hex(0x0000ff));
+
+    scr = lv_disp_get_scr_act(NULL);
+    obj = lv_obj_create(scr);
+    lv_obj_set_size(obj , 50, 320);
+    lv_obj_set_pos(obj , 0, 0);
+
+    lv_obj_add_style(obj, &style0, 0);
+
+    timer = lv_timer_create(thin_rect_demo_cb, 2000, NULL);
+}
+
+void display_start_demo(uint8_t demo) {
+    if (active_demo != DISPLAY_DEMO_NONE) {
+        printf("Already running demo %d\n", active_demo);
+        return;
+    }
 
     if (xGuiSemaphore == NULL) {
-        return; // TODO error
+        ESP_LOGE(TAG, "Display semaphore not Initialized\n");
+        return;
     }
 
     if (xSemaphoreTake(xGuiSemaphore, portMAX_DELAY) != pdTRUE) {
-        return; // TODO error
+        ESP_LOGE(TAG, "Display semaphore not free\n");
+        return;
     }
 
-#if defined CONFIG_LV_USE_DEMO_WIDGETS
-    lv_demo_widgets();
-#elif CONFIG_LV_USE_DEMO_BENCHMARK
-    lv_demo_benchmark();
-#elif CONFIG_LV_USE_DEMO_STRESS
-    lv_demo_stress();
-#elif CONFIG_LV_USE_DEMO_KEYPAD_AND_ENCODER
-    lv_demo_keypad_encoder();
-#elif CONFIG_LV_USE_DEMO_MUSIC
-    lv_demo_music();
-#else
-    lv_obj_t *scr = lv_disp_get_scr_act(NULL);
-    lv_obj_t *label1 =  lv_label_create(scr);
-    lv_label_set_text(label1, "Hello\nworld");
-    lv_obj_align(label1, LV_ALIGN_CENTER, 0, 0);
-#endif
+    active_demo = demo;
+
+    switch (demo) {
+        case DISPLAY_DEMO_LVGL:
+            #if defined CONFIG_LV_USE_DEMO_WIDGETS
+            lv_demo_widgets();
+            #elif CONFIG_LV_USE_DEMO_BENCHMARK
+            lv_demo_benchmark();
+            #elif CONFIG_LV_USE_DEMO_STRESS
+            lv_demo_stress();
+            #elif CONFIG_LV_USE_DEMO_KEYPAD_AND_ENCODER
+            lv_demo_keypad_encoder();
+            #elif CONFIG_LV_USE_DEMO_MUSIC
+            lv_demo_music();
+            #else
+            active_demo = DISPLAY_DEMO_NONE;
+            printf("No LVGL demo selected\n");
+            #endif
+            break;
+        case DISPLAY_DEMO_HELLO_WORLD:
+            hello_world_demo();
+            break;
+        case DISPLAY_DEMO_FULL_SCREEN:
+            full_screen_demo();
+            break;
+        case DISPLAY_DEMO_THIN_RECT:
+            thin_rect_demo();
+            break;
+        default:
+            active_demo = DISPLAY_DEMO_NONE;
+            printf("No demo with number %d", demo);
+    }
 
     xSemaphoreGive(xGuiSemaphore);    
 }
 
-void display_stop_demo(void) {
-
+void display_stop_demo() {
     if (xGuiSemaphore == NULL) {
-        return; // TODO error
+        ESP_LOGE(TAG, "Display semaphore not Initialized\n");        
+        return;
     }
 
     if (xSemaphoreTake(xGuiSemaphore, portMAX_DELAY) != pdTRUE) {
-        return; // TODO error
+        ESP_LOGE(TAG, "Display semaphore not free\n");
+        return;
     }
 
-#if defined CONFIG_LV_USE_DEMO_WIDGETS
-    lv_demo_widgets_close();
-#elif CONFIG_LV_USE_DEMO_BENCHMARK
-    lv_demo_benchmark_close();
-#elif CONFIG_LV_USE_DEMO_STRESS
-    lv_demo_stress_close();
-#elif CONFIG_LV_USE_DEMO_KEYPAD_AND_ENCODER
-    lv_demo_keypad_encoder_close();
-#elif CONFIG_LV_USE_DEMO_MUSIC
-    lv_demo_music_close();
-#else
-    lv_obj_clean(lv_scr_act());
-#endif
+    switch (active_demo) {
+        case DISPLAY_DEMO_LVGL:
+            #if defined CONFIG_LV_USE_DEMO_WIDGETS
+            lv_demo_widgets_close();
+            #elif CONFIG_LV_USE_DEMO_BENCHMARK
+            lv_demo_benchmark_close();
+            #elif CONFIG_LV_USE_DEMO_STRESS
+            lv_demo_stress_close();
+            #elif CONFIG_LV_USE_DEMO_KEYPAD_AND_ENCODER
+            lv_demo_keypad_encoder_close();
+            #elif CONFIG_LV_USE_DEMO_MUSIC
+            lv_demo_music_close();
+            #endif
+            break;
+        case DISPLAY_DEMO_HELLO_WORLD:
+            lv_obj_clean(lv_scr_act());
+            break;
+        case DISPLAY_DEMO_FULL_SCREEN: // Fall through
+        case DISPLAY_DEMO_THIN_RECT:
+            lv_timer_del(timer);
+            timer = NULL;
+            lv_style_reset(&style0);
+            lv_style_reset(&style1);
+            lv_obj_clean(lv_scr_act());
+            break;
+    }
+
+    active_demo = DISPLAY_DEMO_NONE;
 
     xSemaphoreGive(xGuiSemaphore);    
 }

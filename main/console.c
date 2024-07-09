@@ -109,13 +109,13 @@ static void register_enc_commands() {
  *      Display commands
  ***********************************************/
 static int disp_start_test(int argc, char **argv) {
-    printf("Starting LVGL display demo\n");
-    display_start_demo();
+    printf("Starting display demo\n");
+    display_start_demo(atoi(argv[1]));
     return 0;
 }
 
 static int disp_stop_test(int argc, char **argv) {
-    printf("Stopping LVGL display demo\n");
+    printf("Stopping display demo\n");
     display_stop_demo();
     return 0;
 }
@@ -123,7 +123,7 @@ static int disp_stop_test(int argc, char **argv) {
 static void register_disp_commands() {
     const esp_console_cmd_t cmd_start = {
         .command = "disp_test",
-        .help = "Start LVGL display demo",
+        .help = "Start display demo",
         .hint = NULL,
         .func = &disp_start_test,
     };
@@ -131,7 +131,7 @@ static void register_disp_commands() {
 
     const esp_console_cmd_t cmd_stop = {
         .command = "disp_test_stop",
-        .help = "Stop LVGL display demo",
+        .help = "Stop display demo",
         .hint = NULL,
         .func = &disp_stop_test,
     };

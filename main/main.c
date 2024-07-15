@@ -11,7 +11,7 @@ void app_main(void) {
     printf("Booted!\n");
     usb_comp_setup();
     usb_comp_msc_test();
-    encoder_setup();
+    //encoder_setup();
     display_setup();
     
     console_setup();

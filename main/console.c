@@ -60,6 +60,7 @@ static void register_msc_commands() {
 /************************************************
  *      Encoder commands
  ***********************************************/
+#if 0
 uint32_t enc_0_test_var = 100;
 uint32_t enc_1_test_var = 10;
 
@@ -104,7 +105,7 @@ static void register_enc_commands() {
     };
     ESP_ERROR_CHECK(esp_console_cmd_register(&cmd_test));
 }
-
+#endif
 /************************************************
  *      Display commands
  ***********************************************/
@@ -144,7 +145,7 @@ static void register_disp_commands() {
 void console_setup() {
     esp_console_register_help_command();
     register_msc_commands();
-    register_enc_commands();
+    //register_enc_commands();
     register_disp_commands();
 
     esp_console_repl_t *repl = NULL;

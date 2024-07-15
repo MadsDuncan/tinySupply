@@ -1,9 +1,10 @@
 set(srcs 
     "console.c"
-    "encoder.c"
+    "display/display.c"
+    "display/display_drv_encoder.c"
     "main.c"
     "usb_composite.c"
-    "display/display.c"
+    #"encoder.c"
 )
 
 set(include_dirs 

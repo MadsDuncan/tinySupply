@@ -1,5 +1,6 @@
 #include "demos/lv_demos.h"
 #include "display.h"
+#include "display_drv_encoder.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
@@ -17,6 +18,9 @@
 // If you wish to call *any* lvgl function from other threads/tasks
 // you should lock on the very same semaphore!
 SemaphoreHandle_t lv_task_sema;
+
+lv_indev_t *indev_touchpad;
+lv_indev_t *indev_encoder;
 
 /************************************************
  *      Setup
@@ -36,6 +40,7 @@ static void lv_task(void *pvParameter) {
 
     // Initialize SPI and I2C
     lvgl_driver_init();
+    display_drv_encoder_setup();
 
     // Buffer setup
     lv_color_t* buf1 = heap_caps_malloc(DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA);
@@ -56,11 +61,18 @@ static void lv_task(void *pvParameter) {
     lv_disp_drv_register(&disp_drv);
 
     // Touch interface setup
-    lv_indev_drv_t indev_drv;
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.read_cb = touch_driver_read;
-    indev_drv.type = LV_INDEV_TYPE_POINTER;
-    lv_indev_drv_register(&indev_drv);
+    lv_indev_drv_t indev_drv_touch;
+    lv_indev_drv_init(&indev_drv_touch);
+    indev_drv_touch.read_cb = touch_driver_read;
+    indev_drv_touch.type = LV_INDEV_TYPE_POINTER;
+    indev_touchpad = lv_indev_drv_register(&indev_drv_touch);
+
+    // Encoder setup
+    lv_indev_drv_t indev_drv_encoder;
+    lv_indev_drv_init(&indev_drv_encoder);
+    indev_drv_encoder.type = LV_INDEV_TYPE_ENCODER;
+    indev_drv_encoder.read_cb = display_drv_encoder_cb;
+    indev_encoder = lv_indev_drv_register(&indev_drv_encoder);
 
     // Create and start a periodic timer interrupt to call lv_tick_inc
     const esp_timer_create_args_t lv_tick_timer_args = {
@@ -361,6 +373,52 @@ static void app_demo() {
     timer = lv_timer_create(app_demo_cb, 500, NULL);
 }
 
+static lv_obj_t * spinbox;
+
+static void spinbox_inc_demo_cb(lv_event_t *e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if(code == LV_EVENT_SHORT_CLICKED || code  == LV_EVENT_LONG_PRESSED_REPEAT) {
+        lv_spinbox_increment(spinbox);
+    }
+}
+
+static void spinbox_dec_demo_cb(lv_event_t *e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if(code == LV_EVENT_SHORT_CLICKED || code == LV_EVENT_LONG_PRESSED_REPEAT) {
+        lv_spinbox_decrement(spinbox);
+    }
+}
+
+static void spinbox_demo() {
+    spinbox = lv_spinbox_create(lv_scr_act());
+    lv_spinbox_set_range(spinbox, 0, 25000);
+    lv_spinbox_set_digit_format(spinbox, 5, 2);
+    lv_spinbox_step_prev(spinbox);
+    lv_obj_set_width(spinbox, 200);
+    lv_obj_center(spinbox);
+    lv_obj_set_style_text_font(spinbox, &lv_font_montserrat_48, 0);
+
+    lv_coord_t h = lv_obj_get_height(spinbox);
+
+    lv_obj_t *btn_p = lv_btn_create(lv_scr_act());
+    lv_obj_set_size(btn_p, h, h);
+    lv_obj_align_to(btn_p, spinbox, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
+    lv_obj_set_style_bg_img_src(btn_p, LV_SYMBOL_PLUS, 0);
+    lv_obj_add_event_cb(btn_p, spinbox_inc_demo_cb, LV_EVENT_ALL,  NULL);
+
+    lv_obj_t *btn_m = lv_btn_create(lv_scr_act());
+    lv_obj_set_size(btn_m, h, h);
+    lv_obj_align_to(btn_m, spinbox, LV_ALIGN_OUT_LEFT_MID, -5, 0);
+    lv_obj_set_style_bg_img_src(btn_m, LV_SYMBOL_MINUS, 0);
+    lv_obj_add_event_cb(btn_m, spinbox_dec_demo_cb, LV_EVENT_ALL, NULL);
+
+    lv_group_t *group = lv_group_create();
+    lv_group_add_obj(group, spinbox);
+    lv_group_add_obj(group, btn_p);
+    lv_group_add_obj(group, btn_m);
+    lv_indev_set_group(indev_encoder, group);
+}
+
 void display_start_demo(uint8_t demo) {
     if (active_demo != DISPLAY_DEMO_NONE) {
         printf("Already running demo %d\n", active_demo);
@@ -407,6 +465,9 @@ void display_start_demo(uint8_t demo) {
             break;
         case DISPLAY_DEMO_APP:
             app_demo();
+            break;
+        case DISPLAY_DEMO_SPINBOX:
+            spinbox_demo();
             break;
         default:
             active_demo = DISPLAY_DEMO_NONE;

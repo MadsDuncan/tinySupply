@@ -1,7 +1,7 @@
 #include "driver/gpio.h"
 #include "gpio_map.h"
 
-#include "display_drv_encoder.h"
+#include "display_internal.h"
 
 static int32_t encoder_diff;
 

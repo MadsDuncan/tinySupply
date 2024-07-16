@@ -13,7 +13,10 @@ void app_main(void) {
     usb_comp_msc_test();
     //encoder_setup();
     display_setup();
-    
+    // TODO Fix core 0 panic if no delay before starting app
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+    display_start_app();
+
     console_setup();
 
     while(1) {

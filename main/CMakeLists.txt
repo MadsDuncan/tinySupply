@@ -1,6 +1,7 @@
 set(srcs 
     "console.c"
     "display/display.c"
+    "display/display_app.c"
     "display/display_demos.c"
     "display/display_drv_encoder.c"
     "main.c"

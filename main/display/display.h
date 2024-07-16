@@ -11,9 +11,8 @@
 #define DISPLAY_DEMO_APP         5
 #define DISPLAY_DEMO_SPINBOX     6
 
-extern int i;
-
 void display_setup();
+void display_start_app();
 void display_start_demo(uint8_t demo);
 void display_stop_demo();
 

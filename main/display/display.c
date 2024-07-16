@@ -23,7 +23,8 @@ static void lv_tick_task(void *arg) {
 
 static void lv_task(void *pvParameter) {
     (void) pvParameter;
-    lv_task_sema = xSemaphoreCreateMutex();
+
+    xSemaphoreTake(lv_task_sema, portMAX_DELAY);
 
     // Initialize library
     lv_init();
@@ -73,6 +74,8 @@ static void lv_task(void *pvParameter) {
     ESP_ERROR_CHECK(esp_timer_create(&lv_tick_timer_args, &lv_tick_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(lv_tick_timer, LV_TICK_PERIOD_MS * 1000));
 
+    xSemaphoreGive(lv_task_sema);
+
     while (1) {
         // Delay 1 tick (assumes FreeRTOS tick is 10ms
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -91,6 +94,8 @@ static void lv_task(void *pvParameter) {
 }
 
 void display_setup() {
+    lv_task_sema = xSemaphoreCreateMutex();
+
     // If you want to use a task to create the graphic, you NEED to create a Pinned task
     // Otherwise there can be problem such as memory corruption and so on.
     // NOTE: When not using Wi-Fi nor Bluetooth you can pin the lv_task to core 0

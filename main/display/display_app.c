@@ -3,19 +3,25 @@
 #include "display.h"
 #include "display_internal.h"
 
+#define MILLI_V_MAX 25000
+#define MILLI_A_MAX 1500
+
 static lv_obj_t *scr = NULL;
 
 static lv_obj_t *v_val_label;
 static lv_obj_t *i_val_label;
+static lv_obj_t *w_val_label;
 static lv_obj_t *v_const_cont;
 static lv_obj_t *i_const_cont;
 
 static void app_cb() {
-    uint32_t mv = esp_random() % 25000;
-    uint32_t ma = esp_random() % 1500;
+    uint32_t mv = esp_random() % MILLI_V_MAX;
+    uint32_t ma = esp_random() % MILLI_A_MAX;
+    uint32_t mw = (mv * ma) / 1000;
 
     lv_label_set_text_fmt(v_val_label, "%d.%03d", (int)(mv/1000), (int)(mv%1000));
     lv_label_set_text_fmt(i_val_label, "%d.%03d", (int)(ma/1000), (int)(ma%1000));
+    lv_label_set_text_fmt(w_val_label, "%d.%03d", (int)(mw/1000), (int)(mw%1000));
 
     if (esp_random() % 2) {
         lv_obj_add_flag(v_const_cont, LV_OBJ_FLAG_HIDDEN);
@@ -104,7 +110,7 @@ void display_start_app() {
     lv_obj_add_style(v_val_label, &style_base, 0);
     lv_obj_add_style(v_val_label, &style_font_big, 0);
     lv_obj_set_align(v_val_label, LV_ALIGN_CENTER);
-    lv_label_set_text(v_val_label, "12.232");
+    lv_label_set_text(v_val_label, "0.000");
 
     v_const_cont = lv_obj_create(v_grid);
     lv_obj_add_style(v_const_cont, &style_base, 0);
@@ -154,7 +160,7 @@ void display_start_app() {
     lv_obj_add_style(i_val_label, &style_base, 0);
     lv_obj_add_style(i_val_label, &style_font_big, 0);
     lv_obj_set_align(i_val_label, LV_ALIGN_CENTER);
-    lv_label_set_text(i_val_label, "0.990");
+    lv_label_set_text(i_val_label, "0.000");
 
     i_const_cont = lv_obj_create(i_grid);
     lv_obj_add_style(i_const_cont, &style_base, 0);
@@ -175,17 +181,39 @@ void display_start_app() {
     lv_obj_set_align(i_unit_label, LV_ALIGN_CENTER);
     lv_label_set_text(i_unit_label, "A");
 
+    // Power fields
+    lv_obj_t *w_grid = lv_obj_create(scr);
+    lv_obj_set_height(w_grid, LV_SIZE_CONTENT);
+    lv_obj_add_style(w_grid, &style_base, 0);
+
+    lv_obj_t *w_val_cont = lv_obj_create(w_grid);
+    lv_obj_add_style(w_val_cont, &style_base, 0);
+    w_val_label = lv_label_create(w_val_cont);
+    lv_obj_add_style(w_val_label, &style_base, 0);
+    lv_obj_add_style(w_val_label, &style_font_big, 0);
+    lv_obj_set_align(w_val_label, LV_ALIGN_CENTER);
+    lv_label_set_text(w_val_label, "0.000");
+
+    lv_obj_t *w_unit_cont = lv_obj_create(w_grid);
+    lv_obj_add_style(w_unit_cont, &style_base, 0);
+    lv_obj_t *w_unit_label = lv_label_create(w_unit_cont);
+    lv_obj_add_style(w_unit_label, &style_base, 0);
+    lv_obj_add_style(w_unit_label, &style_font_mid, 0);
+    lv_obj_set_align(w_unit_label, LV_ALIGN_CENTER);
+    lv_label_set_text(w_unit_label, "W");
+
     // Top grid
     static lv_coord_t main_grid_col[] = {LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
-    static lv_coord_t main_grid_row[] = {130, LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
+    static lv_coord_t main_grid_row[] = {80, LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
 
-    // Grid for voltage and current
+    // Grid for voltage, current and power
     static lv_coord_t param_grid_col[] = {150, LV_GRID_FR(1), 50, LV_GRID_TEMPLATE_LAST};
     static lv_coord_t param_grid_row[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
 
     lv_obj_set_grid_dsc_array(scr, main_grid_col, main_grid_row);
     lv_obj_set_grid_cell(v_grid, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
     lv_obj_set_grid_cell(i_grid, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 2, 1);
+    lv_obj_set_grid_cell(w_grid, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 3, 1);
 
     lv_obj_set_grid_dsc_array(v_grid, param_grid_col, param_grid_row);
     lv_obj_set_grid_cell(v_set_str_cont, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
@@ -200,6 +228,10 @@ void display_start_app() {
     lv_obj_set_grid_cell(i_val_cont,     LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 2);
     lv_obj_set_grid_cell(i_const_cont,   LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
     lv_obj_set_grid_cell(i_unit_cont,    LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
+
+    lv_obj_set_grid_dsc_array(w_grid, param_grid_col, param_grid_row);
+    lv_obj_set_grid_cell(w_val_cont,     LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 2);
+    lv_obj_set_grid_cell(w_unit_cont,    LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
 
     lv_group_t *group = lv_group_create();
     lv_group_add_obj(group, v_set_spinbox);

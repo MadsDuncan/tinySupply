@@ -42,6 +42,7 @@ void display_start_app() {
     lv_style_set_bg_color(&style_base, lv_color_hex(0x000000));
     lv_style_set_text_color(&style_base, lv_color_hex(0xffffff));
     lv_style_set_text_font(&style_base, &lv_font_montserrat_14);
+    lv_style_set_text_align(&style_base, LV_TEXT_ALIGN_CENTER);
     lv_style_set_pad_top(&style_base, 0);
     lv_style_set_pad_bottom(&style_base, 0);
     lv_style_set_pad_left(&style_base, 0);
@@ -89,11 +90,13 @@ void display_start_app() {
 
     lv_obj_t *v_set_cont = lv_obj_create(v_grid);
     lv_obj_add_style(v_set_cont, &style_base, 0);
-    lv_obj_t *v_set_label = lv_label_create(v_set_cont);
-    lv_obj_add_style(v_set_label, &style_base, 0);
-    lv_obj_add_style(v_set_label, &style_font_mid, 0);
-    lv_obj_set_align(v_set_label, LV_ALIGN_CENTER);
-    lv_label_set_text(v_set_label, "12.000");
+    lv_obj_t *v_set_spinbox = lv_spinbox_create(v_set_cont);
+    lv_obj_add_style(v_set_spinbox, &style_base, 0);
+    lv_obj_add_style(v_set_spinbox, &style_font_mid, 0);
+    lv_obj_set_align(v_set_spinbox, LV_ALIGN_CENTER);
+    lv_spinbox_set_range(v_set_spinbox, 0, 25000);
+    lv_spinbox_set_digit_format(v_set_spinbox, 5, 2);
+    lv_spinbox_set_cursor_pos(v_set_spinbox, 0);
 
     lv_obj_t *v_val_cont = lv_obj_create(v_grid);
     lv_obj_add_style(v_val_cont, &style_base, 0);
@@ -137,11 +140,13 @@ void display_start_app() {
 
     lv_obj_t *i_set_cont = lv_obj_create(i_grid);
     lv_obj_add_style(i_set_cont, &style_base, 0);
-    lv_obj_t *i_set_label = lv_label_create(i_set_cont);
-    lv_obj_add_style(i_set_label, &style_base, 0);
-    lv_obj_add_style(i_set_label, &style_font_mid, 0);
-    lv_obj_set_align(i_set_label, LV_ALIGN_CENTER);
-    lv_label_set_text(i_set_label, "1.000");
+    lv_obj_t *i_set_spinbox = lv_spinbox_create(i_set_cont);
+    lv_obj_add_style(i_set_spinbox, &style_base, 0);
+    lv_obj_add_style(i_set_spinbox, &style_font_mid, 0);
+    lv_obj_set_align(i_set_spinbox, LV_ALIGN_CENTER);
+    lv_spinbox_set_range(i_set_spinbox, 0, 2000);
+    lv_spinbox_set_digit_format(i_set_spinbox, 4, 1);
+    lv_spinbox_set_cursor_pos(i_set_spinbox, 0);
 
     lv_obj_t *i_val_cont = lv_obj_create(i_grid);
     lv_obj_add_style(i_val_cont, &style_base, 0);
@@ -178,7 +183,6 @@ void display_start_app() {
     static lv_coord_t param_grid_col[] = {150, LV_GRID_FR(1), 50, LV_GRID_TEMPLATE_LAST};
     static lv_coord_t param_grid_row[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
 
-
     lv_obj_set_grid_dsc_array(scr, main_grid_col, main_grid_row);
     lv_obj_set_grid_cell(v_grid, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
     lv_obj_set_grid_cell(i_grid, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 2, 1);
@@ -197,7 +201,13 @@ void display_start_app() {
     lv_obj_set_grid_cell(i_const_cont,   LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
     lv_obj_set_grid_cell(i_unit_cont,    LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
 
-	lv_timer_t *timer = lv_timer_create(app_cb, 500, NULL);
+    lv_group_t *group = lv_group_create();
+    lv_group_add_obj(group, v_set_spinbox);
+    lv_group_add_obj(group, i_set_spinbox);
+    lv_indev_set_group(indev_encoder, group);
+    lv_indev_set_group(indev_touchpad, group);
+
+    lv_timer_t *timer = lv_timer_create(app_cb, 500, NULL);
 
     xSemaphoreGive(lv_task_sema);
 }

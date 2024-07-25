@@ -31,7 +31,7 @@ static void lv_task(void *pvParameter) {
 
     // Initialize SPI and I2C
     lvgl_driver_init();
-    display_drv_encoder_setup();
+    display_indev_setup();
 
     // Buffer setup
     lv_color_t* buf1 = heap_caps_malloc(DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA);
@@ -62,7 +62,7 @@ static void lv_task(void *pvParameter) {
     lv_indev_drv_t indev_drv_encoder;
     lv_indev_drv_init(&indev_drv_encoder);
     indev_drv_encoder.type = LV_INDEV_TYPE_ENCODER;
-    indev_drv_encoder.read_cb = display_drv_encoder_cb;
+    indev_drv_encoder.read_cb = display_indev_cb;
     indev_encoder = lv_indev_drv_register(&indev_drv_encoder);
 
     // Create and start a periodic timer interrupt to call lv_tick_inc

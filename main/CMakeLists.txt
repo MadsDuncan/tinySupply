@@ -3,7 +3,7 @@ set(srcs
     "display/display.c"
     "display/display_app.c"
     "display/display_demos.c"
-    "display/display_drv_encoder.c"
+    "display/display_indev.c"
     "main.c"
     "usb_composite.c"
     #"encoder.c"

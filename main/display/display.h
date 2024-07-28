@@ -10,6 +10,7 @@
 #define DISPLAY_DEMO_THIN_RECT   4
 #define DISPLAY_DEMO_APP         5
 #define DISPLAY_DEMO_SPINBOX     6
+#define DISPLAY_DEMO_MENU        7
 
 void display_setup();
 void display_start_app();

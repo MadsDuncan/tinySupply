@@ -11,6 +11,9 @@ static lv_obj_t *scr = NULL;
 static lv_obj_t *obj = NULL;
 static lv_timer_t *timer = NULL;
 
+/************************************************
+ *      Simple demos
+ ***********************************************/
 static void hello_world_demo() {
     scr = lv_disp_get_scr_act(NULL);
     obj =  lv_label_create(scr);
@@ -80,6 +83,9 @@ static void thin_rect_demo() {
     timer = lv_timer_create(thin_rect_demo_cb, 2000, NULL);
 }
 
+/************************************************
+ *      Application view demo
+ ***********************************************/
 #include "esp_random.h"
 
 lv_obj_t *v_val_label;
@@ -267,6 +273,9 @@ static void app_demo() {
     timer = lv_timer_create(app_demo_cb, 500, NULL);
 }
 
+/************************************************
+ *      Spinbox demo
+ ***********************************************/
 static lv_obj_t * spinbox;
 
 static void spinbox_inc_demo_cb(lv_event_t *e) {
@@ -313,6 +322,168 @@ static void spinbox_demo() {
     lv_indev_set_group(indev_encoder, group);
 }
 
+/************************************************
+ *      Menu demo
+ ***********************************************/
+static void menu_demo_back_btn_cb(lv_event_t *event) {
+    lv_obj_t * obj = lv_event_get_target(event);
+    lv_obj_t * menu = lv_event_get_user_data(event);
+
+    if(lv_menu_back_btn_is_root(menu, obj)) {
+        lv_obj_t * mbox1 = lv_msgbox_create(NULL, "Hello", "Root back btn click.", NULL, true);
+        lv_obj_center(mbox1);
+    }
+}
+
+static lv_obj_t* create_menu_item_name(lv_obj_t *parent, const char *icon, const char *name) {
+    lv_obj_t *obj = lv_menu_cont_create(parent);
+
+    lv_obj_t *img = NULL;
+    if(icon) {
+        img = lv_img_create(obj);
+        lv_img_set_src(img, icon);
+    }
+
+    lv_obj_t *label = lv_label_create(obj);
+    lv_label_set_text(label, name);
+    lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL_CIRCULAR);
+    lv_obj_set_flex_grow(label, 1);
+
+    return obj;
+}
+
+static lv_obj_t* create_menu_item_switch(lv_obj_t *parent, const char *icon, const char *name, bool checked) {
+    lv_obj_t *obj = create_menu_item_name(parent, icon, name);
+
+    lv_obj_t *sw = lv_switch_create(obj);
+    lv_obj_add_state(sw, checked ? LV_STATE_CHECKED : 0);
+
+    return sw;
+}
+
+static lv_obj_t* create_menu_item_dropdown(lv_obj_t *parent, const char *icon, const char *name, char *options) {
+    lv_obj_t *obj = create_menu_item_name(parent, icon, name);
+
+    lv_obj_t *dd = lv_dropdown_create(obj);
+    lv_dropdown_set_options(dd, options);
+
+    return dd;
+}
+
+static lv_obj_t* create_menu_item_info(lv_obj_t *parent, const char *icon, const char *name, char *info) {
+    lv_obj_t *obj = create_menu_item_name(parent, icon, name);
+
+    lv_obj_t *label = lv_label_create(obj);
+    lv_label_set_text(label, info);
+
+    return label;
+}
+
+static void inc_sb_cb(lv_event_t *event) {
+    lv_obj_t *sb = (lv_obj_t*)event->user_data;
+    lv_event_code_t code = lv_event_get_code(event);
+
+    if(code == LV_EVENT_SHORT_CLICKED || code  == LV_EVENT_LONG_PRESSED_REPEAT) {
+        lv_spinbox_increment(sb);
+    }
+}
+
+static void dec_sb_cb(lv_event_t *event) {
+    lv_obj_t *sb = (lv_obj_t*)event->user_data;
+    lv_event_code_t code = lv_event_get_code(event);
+
+    if(code == LV_EVENT_SHORT_CLICKED || code == LV_EVENT_LONG_PRESSED_REPEAT) {
+        lv_spinbox_decrement(sb);
+    }
+}
+
+static lv_obj_t* create_menu_item_spinbox(lv_obj_t *parent, const char *icon, const char *name) {
+    lv_obj_t *obj = create_menu_item_name(parent, icon, name);
+
+    lv_obj_t *sb = lv_spinbox_create(obj);
+    lv_spinbox_set_digit_format(sb, 2, 0);
+    lv_spinbox_set_range(sb, 0, 10);
+
+    lv_coord_t h = lv_obj_get_height(sb);
+
+    lv_obj_t *btn_p = lv_btn_create(obj);
+    lv_obj_set_style_bg_img_src(btn_p, LV_SYMBOL_PLUS, 0);
+    lv_obj_set_size(btn_p, h, h);
+    lv_obj_add_event_cb(btn_p, inc_sb_cb, LV_EVENT_ALL, (void*)sb);
+
+    lv_obj_t *btn_m = lv_btn_create(obj);
+    lv_obj_set_style_bg_img_src(btn_m, LV_SYMBOL_MINUS, 0);
+    lv_obj_set_size(btn_m, h, h);
+    lv_obj_add_event_cb(btn_m, dec_sb_cb, LV_EVENT_ALL, (void*)sb);
+
+    return sb;
+}
+
+void menu_demo() {
+    /*Create a menu object*/
+    lv_obj_t *menu = lv_menu_create(lv_scr_act());
+    lv_obj_set_size(menu, lv_disp_get_hor_res(NULL), lv_disp_get_ver_res(NULL));
+    lv_obj_center(menu);
+
+    /*Modify the header*/
+    lv_obj_t *back_btn = lv_menu_get_main_header_back_btn(menu);
+    lv_obj_t *back_btn_label = lv_label_create(back_btn);
+    lv_label_set_text(back_btn_label, "Back");
+    lv_menu_set_mode_root_back_btn(menu, LV_MENU_ROOT_BACK_BTN_ENABLED);
+    lv_obj_add_event_cb(menu, menu_demo_back_btn_cb, LV_EVENT_CLICKED, menu);
+
+
+    lv_obj_t *cont;
+    lv_obj_t *label;
+    lv_obj_t *section;
+
+    // Submenu
+    lv_obj_t *subpage = lv_menu_page_create(menu, "Submenu");
+    cont = lv_menu_cont_create(subpage);
+    label = lv_label_create(cont);
+    lv_label_set_text(label, "Hello, I am hiding here");
+
+    // Main menu
+    lv_obj_t *main_page = lv_menu_page_create(menu, "Menu");
+
+    lv_obj_t *submenu_cont = lv_menu_cont_create(main_page);
+    label = lv_label_create(submenu_cont);
+    lv_label_set_text(label, "Subpage");
+    lv_menu_set_load_page_event(menu, submenu_cont, subpage);
+
+    section = lv_menu_section_create(main_page);
+    lv_obj_t *switch1 = create_menu_item_switch(section, NULL, "Switch", false);
+
+    section = lv_menu_section_create(main_page);
+    lv_obj_t *dropdown = create_menu_item_dropdown(section, NULL, "Drop down", "A\n" "B\n" "C");
+
+    section = lv_menu_section_create(main_page);
+    lv_obj_t *info1 = create_menu_item_info(section, NULL, "Text 1", "Interesting stuff here!");
+
+    section = lv_menu_section_create(main_page);
+    lv_obj_t *info2 = create_menu_item_info(section, NULL, "Text 2", "Multi\n" "line\n" "stuff\n" "here");
+
+    section = lv_menu_section_create(main_page);
+    lv_obj_t *spinbox1 = create_menu_item_spinbox(section, NULL, "Spinbox 1");
+
+    section = lv_menu_section_create(main_page);
+    lv_obj_t *spinbox2 = create_menu_item_spinbox(section, NULL, "Spinbox 2");
+
+    lv_menu_set_page(menu, main_page);
+
+    lv_group_t *group = lv_group_create();
+    lv_group_add_obj(group, submenu_cont);
+    lv_group_add_obj(group, back_btn);
+    lv_group_add_obj(group, switch1);
+    lv_group_add_obj(group, dropdown);
+    lv_group_add_obj(group, spinbox1);
+    lv_group_add_obj(group, spinbox2);
+    lv_indev_set_group(indev_encoder, group);
+}
+
+/************************************************
+ *      Start/stop functions
+ ***********************************************/
 void display_start_demo(uint8_t demo) {
     if (active_demo != DISPLAY_DEMO_NONE) {
         printf("Already running demo %d\n", active_demo);
@@ -362,6 +533,9 @@ void display_start_demo(uint8_t demo) {
             break;
         case DISPLAY_DEMO_SPINBOX:
             spinbox_demo();
+            break;
+        case DISPLAY_DEMO_MENU:
+            menu_demo();
             break;
         default:
             active_demo = DISPLAY_DEMO_NONE;

@@ -43,22 +43,17 @@ static void app_cb() {
     }
 }
 
-void display_start_app() {
-    if (lv_task_sema == NULL) {
-        ESP_LOGE(TAG, "Display semaphore not Initialized\n");
-        return;
-    }
+static lv_style_t style_base;
+static lv_style_t style_focus;
+static lv_style_t style_edit;
+static lv_style_t style_font_small;
+static lv_style_t style_font_mid;
+static lv_style_t style_font_big;
 
-    if (xSemaphoreTake(lv_task_sema, portMAX_DELAY) != pdTRUE) {
-        ESP_LOGE(TAG, "Display semaphore not free\n");
-        return;
-    }
-
-    static lv_style_t style_base;
+static void create_common_styles() {
     lv_style_init(&style_base);
     lv_style_set_bg_color(&style_base, lv_color_hex(0x000000));
     lv_style_set_text_color(&style_base, lv_color_hex(0xffffff));
-    lv_style_set_text_font(&style_base, &lv_font_montserrat_14);
     lv_style_set_text_align(&style_base, LV_TEXT_ALIGN_CENTER);
     lv_style_set_pad_top(&style_base, 0);
     lv_style_set_pad_bottom(&style_base, 0);
@@ -73,26 +68,63 @@ void display_start_app() {
     lv_style_set_border_color(&style_base, lv_color_hex(0xff0000));
 #endif
 
-    static lv_style_t style_focus;
     lv_style_init(&style_focus);
     lv_style_set_outline_width(&style_focus, 0);
     lv_style_set_border_width(&style_focus, 2);
     lv_style_set_border_color(&style_focus, lv_color_hex(0x0000ff));
 
-    static lv_style_t style_edit;
     lv_style_init(&style_edit);
     lv_style_set_outline_width(&style_edit, 0);
     lv_style_set_border_width(&style_edit, 2);
     lv_style_set_border_color(&style_edit, lv_color_hex(0xff0000));
 
-    static lv_style_t style_font_small;
+    lv_style_init(&style_font_small);
     lv_style_set_text_font(&style_font_small, &lv_font_montserrat_20);
 
-    static lv_style_t style_font_mid;
+    lv_style_init(&style_font_mid);
     lv_style_set_text_font(&style_font_mid, &lv_font_montserrat_32);
 
-    static lv_style_t style_font_big;
+    lv_style_init(&style_font_big);
     lv_style_set_text_font(&style_font_big, &lv_font_montserrat_48);
+}
+
+// Will be called when the styles of the base theme are already added to add new styles
+static void theme_cb(lv_theme_t * th, lv_obj_t * obj) {
+    (void)th;
+
+    lv_obj_add_style(obj, &style_base, LV_STATE_DEFAULT);
+    lv_obj_add_style(obj, &style_focus, LV_STATE_FOCUS_KEY);
+    lv_obj_add_style(obj, &style_edit, LV_STATE_FOCUS_KEY | LV_STATE_EDITED);
+
+//    if(lv_obj_check_type(obj, &lv_btn_class)) {
+//        lv_obj_add_style(obj, &style_btn, 0);
+//    }
+}
+
+static void create_theme() {
+    // Initialize the new theme from the current theme
+    lv_theme_t * th_act = lv_disp_get_theme(NULL);
+    static lv_theme_t th_new;
+    th_new = *th_act;
+
+    lv_theme_set_parent(&th_new, th_act);
+    lv_theme_set_apply_cb(&th_new, theme_cb);
+    lv_disp_set_theme(NULL, &th_new);
+}
+
+void display_start_app() {
+    if (lv_task_sema == NULL) {
+        ESP_LOGE(TAG, "Display semaphore not Initialized\n");
+        return;
+    }
+
+    if (xSemaphoreTake(lv_task_sema, portMAX_DELAY) != pdTRUE) {
+        ESP_LOGE(TAG, "Display semaphore not free\n");
+        return;
+    }
+
+    create_common_styles();
+    create_theme();
 
     static lv_style_t style_if;
     lv_style_set_radius(&style_if, 0);
@@ -108,43 +140,29 @@ void display_start_app() {
     lv_style_set_text_color(&style_cc, lv_color_hex(0x000000));
 
     scr = lv_disp_get_scr_act(NULL);
-    lv_obj_add_style(scr, &style_base, LV_STATE_DEFAULT);
 
     // Interface bar
     lv_obj_t *if_grid = lv_obj_create(scr);
-    lv_obj_add_style(if_grid, &style_base, LV_STATE_DEFAULT);
 
     lv_obj_t *btn_menu = lv_btn_create(if_grid);
-    lv_obj_add_style(btn_menu, &style_base, LV_STATE_DEFAULT);
-    lv_obj_add_style(btn_menu, &style_focus, LV_STATE_FOCUS_KEY);
-    lv_obj_add_style(btn_menu, &style_edit, LV_STATE_FOCUS_KEY | LV_STATE_EDITED);
     lv_obj_add_style(btn_menu, &style_font_small, LV_STATE_DEFAULT);
     lv_obj_add_style(btn_menu, &style_if, LV_STATE_DEFAULT);
     lv_obj_set_style_bg_img_src(btn_menu, LV_SYMBOL_SETTINGS, 0);
     lv_obj_add_event_cb(btn_menu, display_indev_touch_btn_cb, LV_EVENT_ALL, (void*)DISPLAY_INDEV_TOUCH_BTN_MENU);
 
     lv_obj_t *btn_up = lv_btn_create(if_grid);
-    lv_obj_add_style(btn_up, &style_base, LV_STATE_DEFAULT);
-    lv_obj_add_style(btn_up, &style_focus, LV_STATE_FOCUS_KEY);
-    lv_obj_add_style(btn_up, &style_edit, LV_STATE_FOCUS_KEY | LV_STATE_EDITED);
     lv_obj_add_style(btn_up, &style_font_small, LV_STATE_DEFAULT);
     lv_obj_add_style(btn_up, &style_if, LV_STATE_DEFAULT);
     lv_obj_set_style_bg_img_src(btn_up, LV_SYMBOL_UP, 0);
     lv_obj_add_event_cb(btn_up, display_indev_touch_btn_cb, LV_EVENT_ALL, (void*)DISPLAY_INDEV_TOUCH_BTN_UP);
 
     lv_obj_t *btn_down = lv_btn_create(if_grid);
-    lv_obj_add_style(btn_down, &style_base, LV_STATE_DEFAULT);
-    lv_obj_add_style(btn_down, &style_focus, LV_STATE_FOCUS_KEY);
-    lv_obj_add_style(btn_down, &style_edit, LV_STATE_FOCUS_KEY | LV_STATE_EDITED);
     lv_obj_add_style(btn_down, &style_font_small, LV_STATE_DEFAULT);
     lv_obj_add_style(btn_down, &style_if, LV_STATE_DEFAULT);
     lv_obj_set_style_bg_img_src(btn_down, LV_SYMBOL_DOWN, 0);
     lv_obj_add_event_cb(btn_down, display_indev_touch_btn_cb, LV_EVENT_ALL, (void*)DISPLAY_INDEV_TOUCH_BTN_DOWN);
 
     lv_obj_t *btn_enter = lv_btn_create(if_grid);
-    lv_obj_add_style(btn_enter, &style_base, LV_STATE_DEFAULT);
-    lv_obj_add_style(btn_enter, &style_focus, LV_STATE_FOCUS_KEY);
-    lv_obj_add_style(btn_enter, &style_edit, LV_STATE_FOCUS_KEY | LV_STATE_EDITED);
     lv_obj_add_style(btn_enter, &style_font_small, LV_STATE_DEFAULT);
     lv_obj_add_style(btn_enter, &style_if, LV_STATE_DEFAULT);
     lv_obj_set_style_bg_img_src(btn_enter, LV_SYMBOL_NEW_LINE, 0);
@@ -152,46 +170,34 @@ void display_start_app() {
 
     // Placeholder
     lv_obj_t *ph_cont = lv_obj_create(if_grid);
-    lv_obj_add_style(ph_cont, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(ph_cont, &style_if, LV_STATE_DEFAULT);
     lv_obj_t *ph_label = lv_label_create(ph_cont);
-    lv_obj_add_style(ph_label, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(ph_label, &style_font_small, LV_STATE_DEFAULT);
     lv_obj_set_align(ph_label, LV_ALIGN_CENTER);
     lv_label_set_text(ph_label, "");
 
     lv_obj_t *pd_v_cont = lv_obj_create(if_grid);
-    lv_obj_add_style(pd_v_cont, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(pd_v_cont, &style_if, LV_STATE_DEFAULT);
     pd_v_label = lv_label_create(pd_v_cont);
-    lv_obj_add_style(pd_v_label, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(pd_v_label, &style_font_small, LV_STATE_DEFAULT);
     lv_obj_set_align(pd_v_label, LV_ALIGN_CENTER);
     lv_label_set_text(pd_v_label, "PD -V");
 
     // View screen
     lv_obj_t *view_grid = lv_obj_create(scr);
-    lv_obj_add_style(view_grid, &style_base, LV_STATE_DEFAULT);
 
     // voltage fields
     lv_obj_t *v_grid = lv_obj_create(view_grid);
     lv_obj_set_height(v_grid, LV_SIZE_CONTENT);
-    lv_obj_add_style(v_grid, &style_base, LV_STATE_DEFAULT);
 
     lv_obj_t *v_set_str_cont = lv_obj_create(v_grid);
-    lv_obj_add_style(v_set_str_cont, &style_base, LV_STATE_DEFAULT);
     lv_obj_t *v_set_str_label = lv_label_create(v_set_str_cont);
-    lv_obj_add_style(v_set_str_label, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(v_set_str_label, &style_font_mid, LV_STATE_DEFAULT);
     lv_obj_set_align(v_set_str_label, LV_ALIGN_CENTER);
     lv_label_set_text(v_set_str_label, "V set");
 
     lv_obj_t *v_set_cont = lv_obj_create(v_grid);
-    lv_obj_add_style(v_set_cont, &style_base, LV_STATE_DEFAULT);
     lv_obj_t *v_set_spinbox = lv_spinbox_create(v_set_cont);
-    lv_obj_add_style(v_set_spinbox, &style_base, LV_STATE_DEFAULT);
-    lv_obj_add_style(v_set_spinbox, &style_focus, LV_STATE_FOCUS_KEY);
-    lv_obj_add_style(v_set_spinbox, &style_edit, LV_STATE_FOCUS_KEY | LV_STATE_EDITED);
     lv_obj_add_style(v_set_spinbox, &style_font_mid, LV_STATE_DEFAULT);
     lv_obj_set_align(v_set_spinbox, LV_ALIGN_CENTER);
     lv_spinbox_set_range(v_set_spinbox, 0, 25000);
@@ -199,28 +205,22 @@ void display_start_app() {
     lv_spinbox_set_cursor_pos(v_set_spinbox, 0);
 
     lv_obj_t *v_val_cont = lv_obj_create(v_grid);
-    lv_obj_add_style(v_val_cont, &style_base, LV_STATE_DEFAULT);
     v_val_label = lv_label_create(v_val_cont);
-    lv_obj_add_style(v_val_label, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(v_val_label, &style_font_big, LV_STATE_DEFAULT);
     lv_obj_set_align(v_val_label, LV_ALIGN_CENTER);
     lv_label_set_text(v_val_label, "0.000");
 
     v_const_cont = lv_obj_create(v_grid);
-    lv_obj_add_style(v_const_cont, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(v_const_cont, &style_cv, LV_STATE_DEFAULT);
     lv_obj_add_flag(v_const_cont, LV_OBJ_FLAG_HIDDEN);
     lv_obj_t *v_const_label = lv_label_create(v_const_cont);
-    lv_obj_add_style(v_const_label, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(v_const_label, &style_cv, LV_STATE_DEFAULT);
     lv_obj_add_style(v_const_label, &style_font_mid, LV_STATE_DEFAULT);
     lv_obj_set_align(v_const_label, LV_ALIGN_CENTER);
     lv_label_set_text(v_const_label, "CV");
 
     lv_obj_t *v_unit_cont = lv_obj_create(v_grid);
-    lv_obj_add_style(v_unit_cont, &style_base, LV_STATE_DEFAULT);
     lv_obj_t *v_unit_label = lv_label_create(v_unit_cont);
-    lv_obj_add_style(v_unit_label, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(v_unit_label, &style_font_mid, LV_STATE_DEFAULT);
     lv_obj_set_align(v_unit_label, LV_ALIGN_CENTER);
     lv_label_set_text(v_unit_label, "V");
@@ -228,22 +228,15 @@ void display_start_app() {
     // Current fields
     lv_obj_t *i_grid = lv_obj_create(view_grid);
     lv_obj_set_height(i_grid, LV_SIZE_CONTENT);
-    lv_obj_add_style(i_grid, &style_base, LV_STATE_DEFAULT);
 
     lv_obj_t *i_set_str_cont = lv_obj_create(i_grid);
-    lv_obj_add_style(i_set_str_cont, &style_base, LV_STATE_DEFAULT);
     lv_obj_t *i_set_str_label = lv_label_create(i_set_str_cont);
-    lv_obj_add_style(i_set_str_label, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(i_set_str_label, &style_font_mid, LV_STATE_DEFAULT);
     lv_obj_set_align(i_set_str_label, LV_ALIGN_CENTER);
     lv_label_set_text(i_set_str_label, "I set");
 
     lv_obj_t *i_set_cont = lv_obj_create(i_grid);
-    lv_obj_add_style(i_set_cont, &style_base, LV_STATE_DEFAULT);
     lv_obj_t *i_set_spinbox = lv_spinbox_create(i_set_cont);
-    lv_obj_add_style(i_set_spinbox, &style_base, LV_STATE_DEFAULT);
-    lv_obj_add_style(i_set_spinbox, &style_focus, LV_STATE_FOCUS_KEY);
-    lv_obj_add_style(i_set_spinbox, &style_edit, LV_STATE_FOCUS_KEY | LV_STATE_EDITED);
     lv_obj_add_style(i_set_spinbox, &style_font_mid, LV_STATE_DEFAULT);
     lv_obj_set_align(i_set_spinbox, LV_ALIGN_CENTER);
     lv_spinbox_set_range(i_set_spinbox, 0, 2000);
@@ -251,28 +244,22 @@ void display_start_app() {
     lv_spinbox_set_cursor_pos(i_set_spinbox, 0);
 
     lv_obj_t *i_val_cont = lv_obj_create(i_grid);
-    lv_obj_add_style(i_val_cont, &style_base, LV_STATE_DEFAULT);
     i_val_label = lv_label_create(i_val_cont);
-    lv_obj_add_style(i_val_label, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(i_val_label, &style_font_big, LV_STATE_DEFAULT);
     lv_obj_set_align(i_val_label, LV_ALIGN_CENTER);
     lv_label_set_text(i_val_label, "0.000");
 
     i_const_cont = lv_obj_create(i_grid);
-    lv_obj_add_style(i_const_cont, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(i_const_cont, &style_cc, LV_STATE_DEFAULT);
     lv_obj_add_flag(i_const_cont, LV_OBJ_FLAG_HIDDEN);
     lv_obj_t *i_const_label = lv_label_create(i_const_cont);
-    lv_obj_add_style(i_const_label, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(i_const_label, &style_cc, LV_STATE_DEFAULT);
     lv_obj_add_style(i_const_label, &style_font_mid, LV_STATE_DEFAULT);
     lv_obj_set_align(i_const_label, LV_ALIGN_CENTER);
     lv_label_set_text(i_const_label, "CC");
 
     lv_obj_t *i_unit_cont = lv_obj_create(i_grid);
-    lv_obj_add_style(i_unit_cont, &style_base, LV_STATE_DEFAULT);
     lv_obj_t *i_unit_label = lv_label_create(i_unit_cont);
-    lv_obj_add_style(i_unit_label, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(i_unit_label, &style_font_mid, LV_STATE_DEFAULT);
     lv_obj_set_align(i_unit_label, LV_ALIGN_CENTER);
     lv_label_set_text(i_unit_label, "A");
@@ -280,20 +267,15 @@ void display_start_app() {
     // Power fields
     lv_obj_t *w_grid = lv_obj_create(view_grid);
     lv_obj_set_height(w_grid, LV_SIZE_CONTENT);
-    lv_obj_add_style(w_grid, &style_base, LV_STATE_DEFAULT);
 
     lv_obj_t *w_val_cont = lv_obj_create(w_grid);
-    lv_obj_add_style(w_val_cont, &style_base, LV_STATE_DEFAULT);
     w_val_label = lv_label_create(w_val_cont);
-    lv_obj_add_style(w_val_label, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(w_val_label, &style_font_big, LV_STATE_DEFAULT);
     lv_obj_set_align(w_val_label, LV_ALIGN_CENTER);
     lv_label_set_text(w_val_label, "0.000");
 
     lv_obj_t *w_unit_cont = lv_obj_create(w_grid);
-    lv_obj_add_style(w_unit_cont, &style_base, LV_STATE_DEFAULT);
     lv_obj_t *w_unit_label = lv_label_create(w_unit_cont);
-    lv_obj_add_style(w_unit_label, &style_base, LV_STATE_DEFAULT);
     lv_obj_add_style(w_unit_label, &style_font_mid, LV_STATE_DEFAULT);
     lv_obj_set_align(w_unit_label, LV_ALIGN_CENTER);
     lv_label_set_text(w_unit_label, "W");

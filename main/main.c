@@ -15,7 +15,7 @@ void app_main(void) {
     display_setup();
     // TODO Fix core 0 panic if no delay before starting app
     vTaskDelay(10 / portTICK_PERIOD_MS);
-    //display_start_app();
+    display_start_app();
 
     console_setup();
 

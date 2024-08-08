@@ -43,9 +43,6 @@ void display_indev_cb(lv_indev_drv_t *indev_drv, lv_indev_data_t *data) {
 
 void display_indev_touch_btn_cb(lv_event_t *event) {
     switch ((uint32_t)event->user_data) {
-        case DISPLAY_INDEV_TOUCH_BTN_MENU:
-
-            break;
         case DISPLAY_INDEV_TOUCH_BTN_UP:
             if (event->code == LV_EVENT_PRESSED || event->code == LV_EVENT_LONG_PRESSED_REPEAT) {
                 enc_diff++;

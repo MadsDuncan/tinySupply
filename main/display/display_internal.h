@@ -11,10 +11,9 @@
 
 #define TAG "display"
 
-#define DISPLAY_INDEV_TOUCH_BTN_MENU    1
-#define DISPLAY_INDEV_TOUCH_BTN_UP      2
-#define DISPLAY_INDEV_TOUCH_BTN_DOWN    3
-#define DISPLAY_INDEV_TOUCH_BTN_ENTER   4
+#define DISPLAY_INDEV_TOUCH_BTN_UP      1
+#define DISPLAY_INDEV_TOUCH_BTN_DOWN    2
+#define DISPLAY_INDEV_TOUCH_BTN_ENTER   3
 
 extern SemaphoreHandle_t lv_task_sema;
 extern lv_indev_t *indev_touchpad;

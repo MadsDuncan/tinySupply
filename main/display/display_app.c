@@ -64,7 +64,8 @@ static lv_obj_t *w_val_label;
 static lv_obj_t *v_const_cont;
 static lv_obj_t *i_const_cont;
 
-// Global objects used in encoder indev group
+// Group related
+lv_group_t *group;
 static lv_obj_t *btn_menu;
 
 static void app_cb() {
@@ -145,7 +146,7 @@ static void theme_cb(lv_theme_t * th, lv_obj_t * obj) {
     (void)th;
 
     lv_obj_add_style(obj, &style_focus, LV_STATE_FOCUS_KEY);
-    lv_obj_add_style(obj, &style_edit, LV_STATE_FOCUS_KEY | LV_STATE_EDITED);
+    lv_obj_add_style(obj, &style_edit, LV_STATE_EDITED);
 
     if (active_window == WINDOW_MENU) {
         lv_obj_add_style(obj, &style_menu_base, LV_STATE_DEFAULT);
@@ -163,6 +164,18 @@ static void create_theme() {
     lv_theme_set_parent(&th_new, th_act);
     lv_theme_set_apply_cb(&th_new, theme_cb);
     lv_disp_set_theme(NULL, &th_new);
+}
+
+static void obj_select_cb(lv_event_t *event) {
+    lv_event_code_t code = lv_event_get_code(event);
+    lv_obj_t *sb = lv_event_get_target(event);
+
+    if (code == LV_EVENT_PRESSING) {
+        lv_group_focus_obj(sb);
+        lv_group_set_editing(group, true);
+    } else if (code == LV_EVENT_LEAVE) {
+        lv_group_set_editing(group, false);
+    }
 }
 
 static lv_obj_t* create_interface_bar() {
@@ -273,7 +286,9 @@ static lv_obj_t* create_menu_window_dropdown(lv_obj_t *parent) {
         }
     }
     lv_dropdown_set_selected(dd, windows[selected_window].menu_dropdown_index);
+    lv_obj_add_event_cb(dd, obj_select_cb, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(dd, menu_window_dropdown_cb, LV_EVENT_VALUE_CHANGED, NULL);
+
 
     return dd;
 }
@@ -287,7 +302,7 @@ static lv_obj_t* create_menu_window() {
 
     lv_menu_set_page(menu, main_page);
 
-    lv_group_t *group = lv_group_create();
+    lv_group_remove_all_objs(group); // Clear objects from previous window
     lv_group_add_obj(group, btn_menu);
     lv_group_add_obj(group, window_dropdown);
     lv_indev_set_group(indev_encoder, group);
@@ -318,6 +333,7 @@ static lv_obj_t* create_view_window() {
 
     lv_obj_t *v_set_cont = lv_obj_create(v_view);
     lv_obj_t *v_set_spinbox = lv_spinbox_create(v_set_cont);
+    lv_obj_add_event_cb(v_set_spinbox, obj_select_cb, LV_EVENT_ALL, NULL);
     lv_obj_add_style(v_set_spinbox, &style_font_mid, LV_STATE_DEFAULT);
     lv_obj_set_align(v_set_spinbox, LV_ALIGN_CENTER);
     lv_spinbox_set_range(v_set_spinbox, 0, 25000);
@@ -357,6 +373,7 @@ static lv_obj_t* create_view_window() {
 
     lv_obj_t *i_set_cont = lv_obj_create(i_view);
     lv_obj_t *i_set_spinbox = lv_spinbox_create(i_set_cont);
+    lv_obj_add_event_cb(i_set_spinbox, obj_select_cb, LV_EVENT_ALL, NULL);
     lv_obj_add_style(i_set_spinbox, &style_font_mid, LV_STATE_DEFAULT);
     lv_obj_set_align(i_set_spinbox, LV_ALIGN_CENTER);
     lv_spinbox_set_range(i_set_spinbox, 0, 2000);
@@ -430,7 +447,7 @@ static lv_obj_t* create_view_window() {
     lv_obj_set_grid_cell(w_val_cont,     LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 2);
     lv_obj_set_grid_cell(w_unit_cont,    LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
 
-    lv_group_t *group = lv_group_create();
+    lv_group_remove_all_objs(group); // Clear objects from previous window
     lv_group_add_obj(group, btn_menu);
     lv_group_add_obj(group, v_set_spinbox);
     lv_group_add_obj(group, i_set_spinbox);
@@ -446,7 +463,7 @@ static lv_obj_t* create_graph_window() {
     lv_label_set_text(label, "Graph");
     lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
 
-    lv_group_t *group = lv_group_create();
+    lv_group_remove_all_objs(group); // Clear objects from previous window
     lv_group_add_obj(group, btn_menu);
     lv_indev_set_group(indev_encoder, group);
 
@@ -460,7 +477,7 @@ static lv_obj_t* create_datalog_window() {
     lv_label_set_text(label, "Datalog");
     lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
 
-    lv_group_t *group = lv_group_create();
+    lv_group_remove_all_objs(group); // Clear objects from previous window
     lv_group_add_obj(group, btn_menu);
     lv_indev_set_group(indev_encoder, group);
 
@@ -507,6 +524,9 @@ void display_start_app() {
 
     create_common_styles();
     create_theme();
+
+    // Create global group. Will be populated by active window.
+    group = lv_group_create();
 
     scr = lv_disp_get_scr_act(NULL);
     lv_obj_t *if_bar = create_interface_bar();

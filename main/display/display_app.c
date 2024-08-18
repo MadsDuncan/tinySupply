@@ -64,15 +64,16 @@ static lv_obj_t *w_val_label;
 static lv_obj_t *v_const_cont;
 static lv_obj_t *i_const_cont;
 
+static lv_obj_t *chart;
+static lv_chart_series_t * ser_v;
+static lv_chart_series_t * ser_i;
+static bool graph_ready = false;
+
 // Group related
 lv_group_t *group;
 static lv_obj_t *btn_menu;
 
 static void app_cb() {
-    if (active_window != WINDOW_VIEW) {
-        return;
-    }
-
     switch (esp_random() % 6) {
         case 0: lv_label_set_text(pd_v_label, "PD 5V"); break;
         case 1: lv_label_set_text(pd_v_label, "PD 9V"); break;
@@ -81,21 +82,46 @@ static void app_cb() {
         case 4: lv_label_set_text(pd_v_label, "PD 18V"); break;
         case 5: lv_label_set_text(pd_v_label, "PD 20V"); break;
     }
-
+#if 1
+    static uint32_t mv = 0;
+    static uint32_t ma = 0;
+    mv += MILLI_V_MAX/200;
+    ma += MILLI_A_MAX/200;
+    if (mv > MILLI_V_MAX) {
+        mv = 0;
+        ma = 0;
+    }
+#else
     uint32_t mv = esp_random() % MILLI_V_MAX;
     uint32_t ma = esp_random() % MILLI_A_MAX;
+#endif
+
     uint32_t mw = (mv * ma) / 1000;
 
-    lv_label_set_text_fmt(v_val_label, "%d.%03d", (int)(mv/1000), (int)(mv%1000));
-    lv_label_set_text_fmt(i_val_label, "%d.%03d", (int)(ma/1000), (int)(ma%1000));
-    lv_label_set_text_fmt(w_val_label, "%d.%03d", (int)(mw/1000), (int)(mw%1000));
+    switch (active_window) {
+        case WINDOW_VIEW:
+            lv_label_set_text_fmt(v_val_label, "%d.%03d", (int)(mv/1000), (int)(mv%1000));
+            lv_label_set_text_fmt(i_val_label, "%d.%03d", (int)(ma/1000), (int)(ma%1000));
+            lv_label_set_text_fmt(w_val_label, "%d.%03d", (int)(mw/1000), (int)(mw%1000));
 
-    if (esp_random() % 2) {
-        lv_obj_add_flag(v_const_cont, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(i_const_cont, LV_OBJ_FLAG_HIDDEN);
-    } else {
-        lv_obj_add_flag(i_const_cont, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(v_const_cont, LV_OBJ_FLAG_HIDDEN);
+            if (esp_random() % 2) {
+                lv_obj_add_flag(v_const_cont, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(i_const_cont, LV_OBJ_FLAG_HIDDEN);
+            } else {
+                lv_obj_add_flag(i_const_cont, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(v_const_cont, LV_OBJ_FLAG_HIDDEN);
+            }
+
+            break;
+        case WINDOW_GRAPH:
+            if (graph_ready) {
+                lv_chart_set_next_value(chart, ser_v, mv);
+                lv_chart_set_next_value(chart, ser_i, ma*0.8); // Modified for visibility on graph
+            }
+
+            break;
+        default:
+            break;
     }
 }
 
@@ -456,12 +482,62 @@ static lv_obj_t* create_view_window() {
     return window;
 }
 
+static void graph_draw_cb(lv_event_t * event)
+{
+    lv_obj_draw_part_dsc_t * dsc = lv_event_get_draw_part_dsc(event);
+
+    if(!lv_obj_draw_part_check_type(dsc, &lv_chart_class, LV_CHART_DRAW_PART_TICK_LABEL)) {
+        return;
+    }
+
+    if(dsc->id == LV_CHART_AXIS_PRIMARY_Y && dsc->text) {
+        lv_snprintf(dsc->text, dsc->text_length, "%dV", (int)(dsc->value/1000));
+    }
+
+    if(dsc->id == LV_CHART_AXIS_SECONDARY_Y && dsc->text) {
+        uint32_t d0 = dsc->value/1000;
+        uint32_t d1 = (dsc->value/100)%10;
+        lv_snprintf(dsc->text, dsc->text_length, "%d.%dA", (int)d0, (int)d1);
+    }
+
+    if(dsc->id == LV_CHART_AXIS_PRIMARY_X && dsc->text) {
+        lv_snprintf(dsc->text, dsc->text_length, "t%d", (int)dsc->value);
+    }
+}
+
 static lv_obj_t* create_graph_window() {
+    graph_ready = false;
+
     lv_obj_t *window = lv_obj_create(scr);
 
-    lv_obj_t *label =  lv_label_create(window);
-    lv_label_set_text(label, "Graph");
-    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+    chart = lv_chart_create(window);
+    lv_obj_set_style_outline_width(chart, 1, 0);
+    lv_obj_set_style_outline_color(chart, lv_color_hex(0xffffff), 0);
+    lv_obj_set_style_radius(chart, 0, 0);
+
+    lv_chart_set_point_count(chart, 1000);
+    lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 0, MILLI_V_MAX);
+    lv_chart_set_range(chart, LV_CHART_AXIS_SECONDARY_Y, 0, MILLI_A_MAX);
+
+    lv_chart_set_type(chart, LV_CHART_TYPE_LINE);   /*Show lines and points too*/
+    lv_chart_set_div_line_count(chart, 6, 11);
+    lv_chart_set_update_mode(chart, /*LV_CHART_UPDATE_MODE_SHIFT*/ LV_CHART_UPDATE_MODE_CIRCULAR);
+    lv_obj_add_event_cb(chart, graph_draw_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+
+    lv_chart_set_axis_tick(chart, LV_CHART_AXIS_PRIMARY_X, 11, 5, 11, 5, true, 40);
+    lv_chart_set_axis_tick(chart, LV_CHART_AXIS_PRIMARY_Y, 6, 0, 6, 3, true, 40);
+    lv_chart_set_axis_tick(chart, LV_CHART_AXIS_SECONDARY_Y, 4, 0, 4, 2, true, 40);
+
+    ser_v = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
+    ser_i = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_BLUE), LV_CHART_AXIS_SECONDARY_Y);
+
+    graph_ready = true;
+
+    static lv_coord_t graph_grid_col[] = {40, LV_GRID_FR(1), 40, LV_GRID_TEMPLATE_LAST};
+    static lv_coord_t graph_grid_row[] = {15, LV_GRID_FR(1), 30, LV_GRID_TEMPLATE_LAST};
+
+    lv_obj_set_grid_dsc_array(window, graph_grid_col, graph_grid_row);
+    lv_obj_set_grid_cell(chart, LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
 
     lv_group_remove_all_objs(group); // Clear objects from previous window
     lv_group_add_obj(group, btn_menu);

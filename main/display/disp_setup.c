@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #include "display.h"
-#include "display_internal.h"
+#include "disp_internal.h"
 
 #define LV_TICK_PERIOD_MS 1
 

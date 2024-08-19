@@ -2,12 +2,12 @@
 #include "demos/lv_demos.h"
 
 #include "display.h"
-#include "display_internal.h"
+#include "disp_internal.h"
 
 static uint8_t active_demo = DISPLAY_DEMO_NONE;
 
 static lv_style_t style0, style1;
-static lv_obj_t *scr = NULL;
+static lv_obj_t *demo_scr = NULL;
 static lv_obj_t *obj = NULL;
 static lv_timer_t *timer = NULL;
 
@@ -15,8 +15,8 @@ static lv_timer_t *timer = NULL;
  *      Simple demos
  ***********************************************/
 static void hello_world_demo() {
-    scr = lv_disp_get_scr_act(NULL);
-    obj =  lv_label_create(scr);
+    demo_scr = lv_disp_get_scr_act(NULL);
+    obj =  lv_label_create(demo_scr);
     lv_label_set_text(obj, "Hello\nworld");
     lv_obj_align(obj, LV_ALIGN_CENTER, 0, 0);
 }
@@ -26,11 +26,11 @@ static void full_screen_demo_cb() {
     switch_color = !switch_color;
 
     if (switch_color) {
-        lv_obj_remove_style(scr, &style0, LV_PART_ANY | LV_STATE_ANY);
-        lv_obj_add_style(scr, &style1, 0);
+        lv_obj_remove_style(demo_scr, &style0, LV_PART_ANY | LV_STATE_ANY);
+        lv_obj_add_style(demo_scr, &style1, 0);
     } else {
-        lv_obj_remove_style(scr, &style1, LV_PART_ANY | LV_STATE_ANY);
-        lv_obj_add_style(scr, &style0, 0);
+        lv_obj_remove_style(demo_scr, &style1, LV_PART_ANY | LV_STATE_ANY);
+        lv_obj_add_style(demo_scr, &style0, 0);
     }
 }
 
@@ -43,12 +43,12 @@ static void full_screen_demo() {
     lv_style_set_bg_color(&style1, lv_color_hex(0x000000));
     lv_style_set_text_color(&style1, lv_color_hex(0xffffff));
 
-    scr = lv_disp_get_scr_act(NULL);
-    obj =  lv_label_create(scr);
+    demo_scr = lv_disp_get_scr_act(NULL);
+    obj =  lv_label_create(demo_scr);
     lv_label_set_text(obj, "Hello\nworld");
     lv_obj_align(obj, LV_ALIGN_CENTER, 0, 0);
 
-    lv_obj_add_style(scr, &style0, 0);
+    lv_obj_add_style(demo_scr, &style0, 0);
 
     timer = lv_timer_create(full_screen_demo_cb, 2000, NULL);
 }
@@ -73,8 +73,8 @@ static void thin_rect_demo() {
     lv_style_init(&style1);
     lv_style_set_bg_color(&style1, lv_color_hex(0x0000ff));
 
-    scr = lv_disp_get_scr_act(NULL);
-    obj = lv_obj_create(scr);
+    demo_scr = lv_disp_get_scr_act(NULL);
+    obj = lv_obj_create(demo_scr);
     lv_obj_set_size(obj , 50, 320);
     lv_obj_set_pos(obj , 0, 0);
 
@@ -88,24 +88,24 @@ static void thin_rect_demo() {
  ***********************************************/
 #include "esp_random.h"
 
-lv_obj_t *v_val_label;
-lv_obj_t *i_val_label;
-lv_obj_t *v_const_cont;
-lv_obj_t *i_const_cont;
+lv_obj_t *demo_v_val_label;
+lv_obj_t *demo_i_val_label;
+lv_obj_t *demo_v_const_cont;
+lv_obj_t *demo_i_const_cont;
 
 static void app_demo_cb() {
     uint32_t mv = esp_random() % 25000;
     uint32_t ma = esp_random() % 1500;
 
-    lv_label_set_text_fmt(v_val_label, "%d.%03d", (int)(mv/1000), (int)(mv%1000));
-    lv_label_set_text_fmt(i_val_label, "%d.%03d", (int)(ma/1000), (int)(ma%1000));
+    lv_label_set_text_fmt(demo_v_val_label, "%d.%03d", (int)(mv/1000), (int)(mv%1000));
+    lv_label_set_text_fmt(demo_i_val_label, "%d.%03d", (int)(ma/1000), (int)(ma%1000));
 
     if (esp_random() % 2) {
-        lv_obj_add_flag(v_const_cont, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(i_const_cont, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(demo_v_const_cont, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(demo_i_const_cont, LV_OBJ_FLAG_HIDDEN);
     } else {
-        lv_obj_add_flag(i_const_cont, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(v_const_cont, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(demo_i_const_cont, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(demo_v_const_cont, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -144,11 +144,11 @@ static void app_demo() {
     lv_style_set_bg_color(&style_cc, lv_color_hex(0x0000ff));
     lv_style_set_text_color(&style_cc, lv_color_hex(0x000000));
 
-    scr = lv_disp_get_scr_act(NULL);
-    lv_obj_add_style(scr, &style_base, 0);
+    demo_scr = lv_disp_get_scr_act(NULL);
+    lv_obj_add_style(demo_scr, &style_base, 0);
 
     // voltage fields
-    lv_obj_t *v_grid = lv_obj_create(scr);
+    lv_obj_t *v_grid = lv_obj_create(demo_scr);
     lv_obj_set_height(v_grid, LV_SIZE_CONTENT);
     lv_obj_add_style(v_grid, &style_base, 0);
 
@@ -170,17 +170,17 @@ static void app_demo() {
 
     lv_obj_t *v_val_cont = lv_obj_create(v_grid);
     lv_obj_add_style(v_val_cont, &style_base, 0);
-    v_val_label = lv_label_create(v_val_cont);
-    lv_obj_add_style(v_val_label, &style_base, 0);
-    lv_obj_add_style(v_val_label, &style_font_big, 0);
-    lv_obj_set_align(v_val_label, LV_ALIGN_CENTER);
-    lv_label_set_text(v_val_label, "12.232");
+    demo_v_val_label = lv_label_create(v_val_cont);
+    lv_obj_add_style(demo_v_val_label, &style_base, 0);
+    lv_obj_add_style(demo_v_val_label, &style_font_big, 0);
+    lv_obj_set_align(demo_v_val_label, LV_ALIGN_CENTER);
+    lv_label_set_text(demo_v_val_label, "12.232");
 
-    v_const_cont = lv_obj_create(v_grid);
-    lv_obj_add_style(v_const_cont, &style_base, 0);
-    lv_obj_add_style(v_const_cont, &style_cv, 0);
-    lv_obj_add_flag(v_const_cont, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_t *v_const_label = lv_label_create(v_const_cont);
+    demo_v_const_cont = lv_obj_create(v_grid);
+    lv_obj_add_style(demo_v_const_cont, &style_base, 0);
+    lv_obj_add_style(demo_v_const_cont, &style_cv, 0);
+    lv_obj_add_flag(demo_v_const_cont, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_t *v_const_label = lv_label_create(demo_v_const_cont);
     lv_obj_add_style(v_const_label, &style_base, 0);
     lv_obj_add_style(v_const_label, &style_cv, 0);
     lv_obj_add_style(v_const_label, &style_font_mid, 0);
@@ -196,7 +196,7 @@ static void app_demo() {
     lv_label_set_text(v_unit_label, "V");
 
     // Current fields
-    lv_obj_t *i_grid = lv_obj_create(scr);
+    lv_obj_t *i_grid = lv_obj_create(demo_scr);
     lv_obj_set_height(i_grid, LV_SIZE_CONTENT);
     lv_obj_add_style(i_grid, &style_base, 0);
 
@@ -218,17 +218,17 @@ static void app_demo() {
 
     lv_obj_t *i_val_cont = lv_obj_create(i_grid);
     lv_obj_add_style(i_val_cont, &style_base, 0);
-    i_val_label = lv_label_create(i_val_cont);
-    lv_obj_add_style(i_val_label, &style_base, 0);
-    lv_obj_add_style(i_val_label, &style_font_big, 0);
-    lv_obj_set_align(i_val_label, LV_ALIGN_CENTER);
-    lv_label_set_text(i_val_label, "0.990");
+    demo_i_val_label = lv_label_create(i_val_cont);
+    lv_obj_add_style(demo_i_val_label, &style_base, 0);
+    lv_obj_add_style(demo_i_val_label, &style_font_big, 0);
+    lv_obj_set_align(demo_i_val_label, LV_ALIGN_CENTER);
+    lv_label_set_text(demo_i_val_label, "0.990");
 
-    i_const_cont = lv_obj_create(i_grid);
-    lv_obj_add_style(i_const_cont, &style_base, 0);
-    lv_obj_add_style(i_const_cont, &style_cc, 0);
-    lv_obj_add_flag(i_const_cont, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_t *i_const_label = lv_label_create(i_const_cont);
+    demo_i_const_cont = lv_obj_create(i_grid);
+    lv_obj_add_style(demo_i_const_cont, &style_base, 0);
+    lv_obj_add_style(demo_i_const_cont, &style_cc, 0);
+    lv_obj_add_flag(demo_i_const_cont, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_t *i_const_label = lv_label_create(demo_i_const_cont);
     lv_obj_add_style(i_const_label, &style_base, 0);
     lv_obj_add_style(i_const_label, &style_cc, 0);
     lv_obj_add_style(i_const_label, &style_font_mid, 0);
@@ -252,23 +252,23 @@ static void app_demo() {
     static lv_coord_t param_grid_row[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST};
 
 
-    lv_obj_set_grid_dsc_array(scr, main_grid_col, main_grid_row);
+    lv_obj_set_grid_dsc_array(demo_scr, main_grid_col, main_grid_row);
     lv_obj_set_grid_cell(v_grid, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
     lv_obj_set_grid_cell(i_grid, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 2, 1);
 
     lv_obj_set_grid_dsc_array(v_grid, param_grid_col, param_grid_row);
-    lv_obj_set_grid_cell(v_set_str_cont, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
-    lv_obj_set_grid_cell(v_set_cont,     LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
-    lv_obj_set_grid_cell(v_val_cont,     LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 2);
-    lv_obj_set_grid_cell(v_const_cont,   LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
-    lv_obj_set_grid_cell(v_unit_cont,    LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
+    lv_obj_set_grid_cell(v_set_str_cont,    LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+    lv_obj_set_grid_cell(v_set_cont,        LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
+    lv_obj_set_grid_cell(v_val_cont,        LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 2);
+    lv_obj_set_grid_cell(demo_v_const_cont, LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+    lv_obj_set_grid_cell(v_unit_cont,       LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
 
     lv_obj_set_grid_dsc_array(i_grid, param_grid_col, param_grid_row);
-    lv_obj_set_grid_cell(i_set_str_cont, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
-    lv_obj_set_grid_cell(i_set_cont,     LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
-    lv_obj_set_grid_cell(i_val_cont,     LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 2);
-    lv_obj_set_grid_cell(i_const_cont,   LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
-    lv_obj_set_grid_cell(i_unit_cont,    LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
+    lv_obj_set_grid_cell(i_set_str_cont,    LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+    lv_obj_set_grid_cell(i_set_cont,        LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
+    lv_obj_set_grid_cell(i_val_cont,        LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 0, 2);
+    lv_obj_set_grid_cell(demo_i_const_cont, LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
+    lv_obj_set_grid_cell(i_unit_cont,       LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 1, 1);
 
     timer = lv_timer_create(app_demo_cb, 500, NULL);
 }

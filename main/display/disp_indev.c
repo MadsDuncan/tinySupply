@@ -1,7 +1,7 @@
 #include "driver/gpio.h"
 #include "gpio_map.h"
 
-#include "display_internal.h"
+#include "disp_internal.h"
 
 static int32_t enc_diff = 0;
 static uint8_t btn_state = LV_INDEV_STATE_RELEASED;

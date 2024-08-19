@@ -1,15 +1,19 @@
-set(srcs 
+set(srcs
     "console.c"
-    "display/display.c"
-    "display/display_app.c"
-    "display/display_demos.c"
-    "display/display_indev.c"
+    "display/disp_app.c"
+    "display/disp_demos.c"
+    "display/disp_indev.c"
+    "display/disp_setup.c"
+    "display/disp_window_datalog.c"
+    "display/disp_window_graph.c"
+    "display/disp_window_menu.c"
+    "display/disp_window_view.c"
     "main.c"
     "usb_composite.c"
     #"encoder.c"
 )
 
-set(include_dirs 
+set(include_dirs
     "."
     "display"
 )

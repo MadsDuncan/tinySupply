@@ -46,7 +46,7 @@ static void app_cb() {
     static uint32_t mv = 0;
     static uint32_t ma = 0;
     mv += MILLI_V_MAX/200;
-    ma += MILLI_A_MAX/200;
+    ma += (MILLI_A_MAX/200)*0.8;
     if (mv > MILLI_V_MAX) {
         mv = 0;
         ma = 0;
@@ -74,11 +74,7 @@ static void app_cb() {
 
             break;
         case WINDOW_GRAPH:
-            if (graph_ready) {
-                lv_chart_set_next_value(graph, graph_series_v, mv);
-                lv_chart_set_next_value(graph, graph_series_i, ma*0.8); // Modified for visibility on graph
-            }
-
+            add_graph_point(mv, ma);
             break;
         default:
             break;

@@ -93,12 +93,8 @@ lv_obj_t* create_view_window();
 /************************************************
  *      Graph window
  ***********************************************/
-extern lv_obj_t *graph;
-extern lv_chart_series_t *graph_series_v;
-extern lv_chart_series_t *graph_series_i;
-extern bool graph_ready;
-
 lv_obj_t* create_graph_window();
+void add_graph_point(uint32_t v, uint32_t i);
 
 /************************************************
  *      Datalogger window

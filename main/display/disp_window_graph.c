@@ -1,9 +1,13 @@
 #include "disp_internal.h"
+#include <string.h>
 
-lv_obj_t *graph;
-lv_chart_series_t *graph_series_v;
-lv_chart_series_t *graph_series_i;
-bool graph_ready = false;
+#define GRAPH_X_MAX 1000
+#define GRAPH_X_CLEAR_STEP (GRAPH_X_MAX / 4)
+
+static lv_obj_t *graph;
+static lv_chart_series_t *graph_series_v;
+static lv_chart_series_t *graph_series_i;
+static bool graph_ready = false;
 
 static void graph_draw_cb(lv_event_t * event)
 {
@@ -38,16 +42,15 @@ lv_obj_t* create_graph_window() {
     lv_obj_set_style_outline_color(graph, lv_color_hex(0xffffff), 0);
     lv_obj_set_style_radius(graph, 0, 0);
 
-    lv_chart_set_point_count(graph, 1000);
+    lv_chart_set_point_count(graph, GRAPH_X_MAX);
     lv_chart_set_range(graph, LV_CHART_AXIS_PRIMARY_Y, 0, MILLI_V_MAX);
     lv_chart_set_range(graph, LV_CHART_AXIS_SECONDARY_Y, 0, MILLI_A_MAX);
 
-    lv_chart_set_type(graph, LV_CHART_TYPE_LINE);   /*Show lines and points too*/
+    lv_chart_set_type(graph, LV_CHART_TYPE_LINE); // Points and lines
     lv_chart_set_div_line_count(graph, 6, 11);
-    lv_chart_set_update_mode(graph, /*LV_CHART_UPDATE_MODE_SHIFT*/ LV_CHART_UPDATE_MODE_CIRCULAR);
     lv_obj_add_event_cb(graph, graph_draw_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
 
-    lv_chart_set_axis_tick(graph, LV_CHART_AXIS_PRIMARY_X, 11, 5, 11, 5, true, 40);
+    lv_chart_set_axis_tick(graph, LV_CHART_AXIS_PRIMARY_X, 10, 5, 10, 5, true, 40);
     lv_chart_set_axis_tick(graph, LV_CHART_AXIS_PRIMARY_Y, 6, 0, 6, 3, true, 40);
     lv_chart_set_axis_tick(graph, LV_CHART_AXIS_SECONDARY_Y, 4, 0, 4, 2, true, 40);
 
@@ -67,4 +70,34 @@ lv_obj_t* create_graph_window() {
     lv_indev_set_group(indev_encoder, group);
 
     return window;
+}
+
+void add_graph_point(uint32_t v, uint32_t i) {
+    static uint32_t current_point = 0;
+
+    if (!graph_ready) {
+        return;
+    }
+
+    if (current_point == (GRAPH_X_MAX)) {
+
+        for (uint32_t i = 0; i < GRAPH_X_MAX; i++) {
+            if (i < GRAPH_X_MAX - GRAPH_X_CLEAR_STEP) {
+                graph_series_v->y_points[i] = graph_series_v->y_points[i + GRAPH_X_CLEAR_STEP];
+                graph_series_i->y_points[i] = graph_series_i->y_points[i + GRAPH_X_CLEAR_STEP];
+            } else {
+                graph_series_v->y_points[i] = LV_CHART_POINT_NONE;
+                graph_series_i->y_points[i] = LV_CHART_POINT_NONE;
+            }
+        }
+
+        current_point -= GRAPH_X_CLEAR_STEP;
+    }
+
+    graph_series_v->y_points[current_point] = v;
+    graph_series_i->y_points[current_point] = i;
+
+    current_point++;
+
+    lv_chart_refresh(graph);
 }

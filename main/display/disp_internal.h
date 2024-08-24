@@ -14,8 +14,8 @@
 /************************************************
  *      Common
  ***********************************************/
-#define MILLI_V_MAX 25000
-#define MILLI_A_MAX 1500
+#define V_MAX 25000 // Max voltage in mV
+#define I_MAX 1500  // Max current in mA
 
 extern SemaphoreHandle_t lv_task_sema;
 
@@ -81,14 +81,8 @@ lv_obj_t* create_menu_window();
 /************************************************
  *      View window
  ***********************************************/
-extern lv_obj_t *view_pd_v_label;
-extern lv_obj_t *view_v_val_label;
-extern lv_obj_t *view_i_val_label;
-extern lv_obj_t *view_w_val_label;
-extern lv_obj_t *view_v_const_cont;
-extern lv_obj_t *view_i_const_cont;
-
 lv_obj_t* create_view_window();
+void update_view(uint32_t v, uint32_t i, uint32_t p, bool const_i);
 
 /************************************************
  *      Graph window

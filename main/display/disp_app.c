@@ -28,6 +28,7 @@ lv_style_t style_font_mid;
 lv_style_t style_font_big;
 
 lv_obj_t *scr = NULL;
+lv_obj_t *view_pd_v_label;
 
 // Group related
 lv_group_t *group;
@@ -43,38 +44,28 @@ static void app_cb() {
         case 5: lv_label_set_text(view_pd_v_label, "PD 20V"); break;
     }
 #if 1
-    static uint32_t mv = 0;
-    static uint32_t ma = 0;
-    mv += MILLI_V_MAX/200;
-    ma += (MILLI_A_MAX/200)*0.8;
-    if (mv > MILLI_V_MAX) {
-        mv = 0;
-        ma = 0;
+    static uint32_t v = 0;
+    static uint32_t i = 0;
+    v += V_MAX/200;
+    i += (I_MAX/200)*0.8;
+    if (v > V_MAX) {
+        v = 0;
+        i = 0;
     }
 #else
-    uint32_t mv = esp_random() % MILLI_V_MAX;
-    uint32_t ma = esp_random() % MILLI_A_MAX;
+    uint32_t v = esp_random() % V_MAX; // Voltage in mV
+    uint32_t i = esp_random() % I_MAX; // Current in mA
 #endif
 
-    uint32_t mw = (mv * ma) / 1000;
+    uint32_t p = (v * i) / 1000; // Power in mW
+    bool const_i = (esp_random() % 2) ? true : false;
 
     switch (active_window) {
         case WINDOW_VIEW:
-            lv_label_set_text_fmt(view_v_val_label, "%d.%03d", (int)(mv/1000), (int)(mv%1000));
-            lv_label_set_text_fmt(view_i_val_label, "%d.%03d", (int)(ma/1000), (int)(ma%1000));
-            lv_label_set_text_fmt(view_w_val_label, "%d.%03d", (int)(mw/1000), (int)(mw%1000));
-
-            if (esp_random() % 2) {
-                lv_obj_add_flag(view_v_const_cont, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(view_i_const_cont, LV_OBJ_FLAG_HIDDEN);
-            } else {
-                lv_obj_add_flag(view_i_const_cont, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(view_v_const_cont, LV_OBJ_FLAG_HIDDEN);
-            }
-
+            update_view(v, i, p, const_i);
             break;
         case WINDOW_GRAPH:
-            add_graph_point(mv, ma);
+            add_graph_point(v, i);
             break;
         default:
             break;

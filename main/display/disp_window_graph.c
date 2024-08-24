@@ -43,8 +43,8 @@ lv_obj_t* create_graph_window() {
     lv_obj_set_style_radius(graph, 0, 0);
 
     lv_chart_set_point_count(graph, GRAPH_X_MAX);
-    lv_chart_set_range(graph, LV_CHART_AXIS_PRIMARY_Y, 0, MILLI_V_MAX);
-    lv_chart_set_range(graph, LV_CHART_AXIS_SECONDARY_Y, 0, MILLI_A_MAX);
+    lv_chart_set_range(graph, LV_CHART_AXIS_PRIMARY_Y, 0, V_MAX);
+    lv_chart_set_range(graph, LV_CHART_AXIS_SECONDARY_Y, 0, I_MAX);
 
     lv_chart_set_type(graph, LV_CHART_TYPE_LINE); // Points and lines
     lv_chart_set_div_line_count(graph, 6, 11);

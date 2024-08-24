@@ -1,11 +1,10 @@
 #include "disp_internal.h"
 
-lv_obj_t *view_pd_v_label;
-lv_obj_t *view_v_val_label;
-lv_obj_t *view_i_val_label;
-lv_obj_t *view_w_val_label;
-lv_obj_t *view_v_const_cont;
-lv_obj_t *view_i_const_cont;
+static lv_obj_t *view_v_val_label;
+static lv_obj_t *view_i_val_label;
+static lv_obj_t *view_w_val_label;
+static lv_obj_t *view_v_const_cont;
+static lv_obj_t *view_i_const_cont;
 
 lv_obj_t* create_view_window() {
     static lv_style_t style_cv;
@@ -151,4 +150,19 @@ lv_obj_t* create_view_window() {
     lv_indev_set_group(indev_encoder, group);
 
     return window;
+}
+
+void update_view(uint32_t v, uint32_t i, uint32_t p, bool const_i) {
+
+    lv_label_set_text_fmt(view_v_val_label, "%d.%03d", (int)(v/1000), (int)(v%1000));
+    lv_label_set_text_fmt(view_i_val_label, "%d.%03d", (int)(i/1000), (int)(i%1000));
+    lv_label_set_text_fmt(view_w_val_label, "%d.%03d", (int)(p/1000), (int)(p%1000));
+
+    if (const_i) {
+        lv_obj_add_flag(view_v_const_cont, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(view_i_const_cont, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(view_i_const_cont, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(view_v_const_cont, LV_OBJ_FLAG_HIDDEN);
+    }
 }

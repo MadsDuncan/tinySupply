@@ -274,7 +274,7 @@ void display_start_app() {
     // Show view window initially
     set_window(WINDOW_VIEW);
 
-    lv_timer_t *timer = lv_timer_create(app_cb, 500, NULL);
+    lv_timer_t *timer = lv_timer_create(app_cb, SAMPLE_PERIOD, NULL);
 
     xSemaphoreGive(lv_task_sema);
 }

@@ -14,8 +14,9 @@
 /************************************************
  *      Common
  ***********************************************/
-#define V_MAX 25000 // Max voltage in mV
-#define I_MAX 1500  // Max current in mA
+#define V_MAX         25000 // Max voltage in mV
+#define I_MAX         1500  // Max current in mA
+#define SAMPLE_PERIOD 500   // Measurement sample rate in ms
 
 extern SemaphoreHandle_t lv_task_sema;
 

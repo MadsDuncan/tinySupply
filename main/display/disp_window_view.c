@@ -8,12 +8,12 @@ static lv_obj_t *view_i_const_cont;
 
 lv_obj_t* create_view_window() {
     static lv_style_t style_cv;
-    lv_style_set_bg_color(&style_cv, lv_color_hex(0xff0000));
-    lv_style_set_text_color(&style_cv, lv_color_hex(0x000000));
+    lv_style_set_bg_color(&style_cv, COLOR_RED);
+    lv_style_set_text_color(&style_cv, COLOR_BLACK);
 
     static lv_style_t style_cc;
-    lv_style_set_bg_color(&style_cc, lv_color_hex(0x0000ff));
-    lv_style_set_text_color(&style_cc, lv_color_hex(0x000000));
+    lv_style_set_bg_color(&style_cc, COLOR_BLUE);
+    lv_style_set_text_color(&style_cc, COLOR_BLACK);
 
     lv_obj_t *window = lv_obj_create(scr);
 

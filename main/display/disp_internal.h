@@ -18,6 +18,15 @@
 #define I_MAX         1500  // Max current in mA
 #define SAMPLE_PERIOD 500   // Measurement sample rate in ms
 
+#define COLOR_BLACK   lv_color_hex(0x000000)
+#define COLOR_RED     lv_color_hex(0xff0000)
+#define COLOR_GREEN   lv_color_hex(0x00ff00)
+#define COLOR_YELLOW  lv_color_hex(0xffff00)
+#define COLOR_BLUE    lv_color_hex(0x0000ff)
+#define COLOR_MAGENTA lv_color_hex(0xff00ff)
+#define COLOR_CYAN    lv_color_hex(0x00ffff)
+#define COLOR_WHITE   lv_color_hex(0xffffff)
+
 extern SemaphoreHandle_t lv_task_sema;
 
 extern lv_style_t style_view_base;

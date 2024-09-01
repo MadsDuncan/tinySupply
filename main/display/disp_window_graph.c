@@ -34,13 +34,13 @@ static void graph_draw_cb(lv_event_t * event) {
     }
 
     if(dsc->id == LV_CHART_AXIS_PRIMARY_Y && dsc->text) {
-        dsc->label_dsc->color = lv_color_hex(0xffffff);
+        dsc->label_dsc->color = COLOR_WHITE;
 
         lv_snprintf(dsc->text, dsc->text_length, "%dV", (int)(dsc->value/1000));
     }
 
     if(dsc->id == LV_CHART_AXIS_SECONDARY_Y && dsc->text) {
-        dsc->label_dsc->color = lv_color_hex(0xffffff);
+        dsc->label_dsc->color = COLOR_WHITE;
 
         uint32_t d0 = dsc->value/1000;
         uint32_t d1 = (dsc->value/100)%10;
@@ -48,7 +48,7 @@ static void graph_draw_cb(lv_event_t * event) {
     }
 
     if(dsc->id == LV_CHART_AXIS_PRIMARY_X && dsc->text) {
-        dsc->label_dsc->color = lv_color_hex(0xffffff);
+        dsc->label_dsc->color = COLOR_WHITE;
 
         // Offset X labels so they fit next to each other
         if (dsc->value % 2) {
@@ -116,7 +116,7 @@ lv_obj_t* create_graph_window() {
 
     graph = lv_chart_create(window);
     lv_obj_set_style_outline_width(graph, 1, 0);
-    lv_obj_set_style_outline_color(graph, lv_color_hex(0xffffff), 0);
+    lv_obj_set_style_outline_color(graph, COLOR_WHITE, 0);
     lv_obj_set_style_radius(graph, 0, 0);
 
     lv_chart_set_point_count(graph, GRAPH_X_POINTS);

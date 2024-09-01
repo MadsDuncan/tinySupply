@@ -74,8 +74,8 @@ static void app_cb() {
 
 static void create_common_styles() {
     lv_style_init(&style_view_base);
-    lv_style_set_bg_color(&style_view_base, lv_color_hex(0x000000));
-    lv_style_set_text_color(&style_view_base, lv_color_hex(0xffffff));
+    lv_style_set_bg_color(&style_view_base, COLOR_BLACK);
+    lv_style_set_text_color(&style_view_base, COLOR_WHITE);
     lv_style_set_text_align(&style_view_base, LV_TEXT_ALIGN_CENTER);
     lv_style_set_pad_top(&style_view_base, 0);
     lv_style_set_pad_bottom(&style_view_base, 0);
@@ -87,26 +87,26 @@ static void create_common_styles() {
     lv_style_set_border_width(&style_view_base, 0);
 #if 0
     lv_style_set_border_width(&style_view_base, 1);
-    lv_style_set_border_color(&style_view_base, lv_color_hex(0xff0000));
+    lv_style_set_border_color(&style_view_base, COLOR_RED);
 #endif
 
     lv_style_init(&style_menu_base);
-    lv_style_set_bg_color(&style_menu_base, lv_color_hex(0x000000));
-    lv_style_set_text_color(&style_menu_base, lv_color_hex(0xffffff));
+    lv_style_set_bg_color(&style_menu_base, COLOR_BLACK);
+    lv_style_set_text_color(&style_menu_base, COLOR_WHITE);
 
     lv_style_init(&style_menu_border);
     lv_style_set_border_width(&style_menu_border, 2);
-    lv_style_set_border_color(&style_menu_border, lv_color_hex(0xffffff));
+    lv_style_set_border_color(&style_menu_border, COLOR_WHITE);
 
     lv_style_init(&style_focus);
     lv_style_set_outline_width(&style_focus, 0);
     lv_style_set_border_width(&style_focus, 2);
-    lv_style_set_border_color(&style_focus, lv_color_hex(0x0000ff));
+    lv_style_set_border_color(&style_focus, COLOR_BLUE);
 
     lv_style_init(&style_edit);
     lv_style_set_outline_width(&style_edit, 0);
     lv_style_set_border_width(&style_edit, 2);
-    lv_style_set_border_color(&style_edit, lv_color_hex(0xff0000));
+    lv_style_set_border_color(&style_edit, COLOR_RED);
 
     lv_style_init(&style_font_small);
     lv_style_set_text_font(&style_font_small, &lv_font_montserrat_20);
@@ -164,7 +164,7 @@ static lv_obj_t* create_interface_bar() {
     static lv_style_t style_if;
     lv_style_set_radius(&style_if, 0);
     lv_style_set_border_width(&style_if, 1);
-    lv_style_set_border_color(&style_if, lv_color_hex(0xffffff));
+    lv_style_set_border_color(&style_if, COLOR_WHITE);
 
     lv_obj_t *bar = lv_obj_create(scr);
 

@@ -36,12 +36,12 @@ static void full_screen_demo_cb() {
 
 static void full_screen_demo() {
     lv_style_init(&style0);
-    lv_style_set_bg_color(&style0, lv_color_hex(0xffffff));
-    lv_style_set_text_color(&style0, lv_color_hex(0x000000));
+    lv_style_set_bg_color(&style0, COLOR_WHITE);
+    lv_style_set_text_color(&style0, COLOR_BLACK);
 
     lv_style_init(&style1);
-    lv_style_set_bg_color(&style1, lv_color_hex(0x000000));
-    lv_style_set_text_color(&style1, lv_color_hex(0xffffff));
+    lv_style_set_bg_color(&style1, COLOR_BLACK);
+    lv_style_set_text_color(&style1, COLOR_WHITE);
 
     demo_scr = lv_disp_get_scr_act(NULL);
     obj =  lv_label_create(demo_scr);
@@ -68,10 +68,10 @@ static void thin_rect_demo_cb() {
 
 static void thin_rect_demo() {
     lv_style_init(&style0);
-    lv_style_set_bg_color(&style0, lv_color_hex(0x00ff00));
+    lv_style_set_bg_color(&style0, COLOR_GREEN);
 
     lv_style_init(&style1);
-    lv_style_set_bg_color(&style1, lv_color_hex(0x0000ff));
+    lv_style_set_bg_color(&style1, COLOR_BLUE);
 
     demo_scr = lv_disp_get_scr_act(NULL);
     obj = lv_obj_create(demo_scr);
@@ -112,8 +112,8 @@ static void app_demo_cb() {
 static void app_demo() {
     static lv_style_t style_base;
     lv_style_init(&style_base);
-    lv_style_set_bg_color(&style_base, lv_color_hex(0x000000));
-    lv_style_set_text_color(&style_base, lv_color_hex(0xffffff));
+    lv_style_set_bg_color(&style_base, COLOR_BLACK);
+    lv_style_set_text_color(&style_base, COLOR_WHITE);
     lv_style_set_text_font(&style_base, &lv_font_montserrat_14);
     lv_style_set_pad_top(&style_base, 0);
     lv_style_set_pad_bottom(&style_base, 0);
@@ -124,7 +124,7 @@ static void app_demo() {
     lv_style_set_border_width(&style_base, 0);
 #if 0
     lv_style_set_border_width(&style_base, 1);
-    lv_style_set_border_color(&style_base, lv_color_hex(0xff0000));
+    lv_style_set_border_color(&style_base, COLOR_RED);
 #endif
 
     static lv_style_t style_font_small;
@@ -137,12 +137,12 @@ static void app_demo() {
     lv_style_set_text_font(&style_font_big, &lv_font_montserrat_48);
 
     static lv_style_t style_cv;
-    lv_style_set_bg_color(&style_cv, lv_color_hex(0xff0000));
-    lv_style_set_text_color(&style_cv, lv_color_hex(0x000000));
+    lv_style_set_bg_color(&style_cv, COLOR_RED);
+    lv_style_set_text_color(&style_cv, COLOR_BLACK);
 
     static lv_style_t style_cc;
-    lv_style_set_bg_color(&style_cc, lv_color_hex(0x0000ff));
-    lv_style_set_text_color(&style_cc, lv_color_hex(0x000000));
+    lv_style_set_bg_color(&style_cc, COLOR_BLUE);
+    lv_style_set_text_color(&style_cc, COLOR_BLACK);
 
     demo_scr = lv_disp_get_scr_act(NULL);
     lv_obj_add_style(demo_scr, &style_base, 0);

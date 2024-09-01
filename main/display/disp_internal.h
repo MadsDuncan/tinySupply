@@ -57,11 +57,13 @@ typedef enum {
 } window_identifier_t;
 
 typedef lv_obj_t* (*create_func_t)();
+typedef void (*remove_func_t)();
 
 typedef struct {
     char name[10];
     lv_obj_t *obj;
     create_func_t create_func;
+    remove_func_t remove_func;
     bool menu_dropdown;
     uint8_t menu_dropdown_index;
 } window_t;
@@ -89,6 +91,8 @@ void update_view(uint32_t v, uint32_t i, uint32_t p, bool const_i);
  *      Graph window
  ***********************************************/
 lv_obj_t* create_graph_window();
+void remove_graph_window();
+void clear_graph();
 void add_graph_point(uint32_t v, uint32_t i);
 
 /************************************************

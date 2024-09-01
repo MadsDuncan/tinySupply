@@ -5,11 +5,11 @@
 #include "disp_internal.h"
 
 window_t windows[] = {
-    [WINDOW_NONE]    = { .name = "NA",      .obj = NULL, .create_func = NULL,                  .menu_dropdown = false},
-    [WINDOW_MENU]    = { .name = "Menu",    .obj = NULL, .create_func = create_menu_window,    .menu_dropdown = false},
-    [WINDOW_VIEW]    = { .name = "View",    .obj = NULL, .create_func = create_view_window,    .menu_dropdown = true},
-    [WINDOW_GRAPH]   = { .name = "Graph",   .obj = NULL, .create_func = create_graph_window,   .menu_dropdown = true},
-    [WINDOW_DATALOG] = { .name = "Datalog", .obj = NULL, .create_func = create_datalog_window, .menu_dropdown = true}
+    [WINDOW_NONE]    = { .name = "NA",      .obj = NULL, .create_func = NULL,                  .remove_func = NULL,                .menu_dropdown = false},
+    [WINDOW_MENU]    = { .name = "Menu",    .obj = NULL, .create_func = create_menu_window,    .remove_func = NULL,                .menu_dropdown = false},
+    [WINDOW_VIEW]    = { .name = "View",    .obj = NULL, .create_func = create_view_window,    .remove_func = NULL,                .menu_dropdown = true},
+    [WINDOW_GRAPH]   = { .name = "Graph",   .obj = NULL, .create_func = create_graph_window,   .remove_func = remove_graph_window, .menu_dropdown = true},
+    [WINDOW_DATALOG] = { .name = "Datalog", .obj = NULL, .create_func = create_datalog_window, .remove_func = NULL,                .menu_dropdown = true}
 };
 
 window_identifier_t active_window = WINDOW_NONE;
@@ -21,6 +21,7 @@ static void btn_menu_cb(lv_event_t *event);
 // Common styles
 lv_style_t style_view_base;
 lv_style_t style_menu_base;
+lv_style_t style_menu_border;
 lv_style_t style_focus;
 lv_style_t style_edit;
 lv_style_t style_font_small;
@@ -60,12 +61,11 @@ static void app_cb() {
     uint32_t p = (v * i) / 1000; // Power in mW
     bool const_i = (esp_random() % 2) ? true : false;
 
+    add_graph_point(v, i);
+
     switch (active_window) {
         case WINDOW_VIEW:
             update_view(v, i, p, const_i);
-            break;
-        case WINDOW_GRAPH:
-            add_graph_point(v, i);
             break;
         default:
             break;
@@ -93,6 +93,10 @@ static void create_common_styles() {
     lv_style_init(&style_menu_base);
     lv_style_set_bg_color(&style_menu_base, lv_color_hex(0x000000));
     lv_style_set_text_color(&style_menu_base, lv_color_hex(0xffffff));
+
+    lv_style_init(&style_menu_border);
+    lv_style_set_border_width(&style_menu_border, 2);
+    lv_style_set_border_color(&style_menu_border, lv_color_hex(0xffffff));
 
     lv_style_init(&style_focus);
     lv_style_set_outline_width(&style_focus, 0);
@@ -123,6 +127,11 @@ static void theme_cb(lv_theme_t * th, lv_obj_t * obj) {
 
     if (active_window == WINDOW_MENU) {
         lv_obj_add_style(obj, &style_menu_base, LV_STATE_DEFAULT);
+
+        if (lv_obj_check_type(obj, &lv_btn_class) || lv_obj_check_type(obj, &lv_dropdown_class)) {
+            lv_obj_add_style(obj, &style_menu_border, LV_STATE_DEFAULT);
+        }
+
     } else {
         lv_obj_add_style(obj, &style_view_base, LV_STATE_DEFAULT);
     }
@@ -215,19 +224,25 @@ static lv_obj_t* create_interface_bar() {
     return bar;
 }
 
-
 static void set_window(window_identifier_t window) {
     if (window == active_window) {
         return;
     }
 
     if (active_window != WINDOW_NONE) {
+        if (windows[active_window].remove_func) {
+            windows[active_window].remove_func();
+        }
+
         lv_obj_del(windows[active_window].obj);
     }
 
     active_window = window;
 
-    windows[window].obj = windows[window].create_func();
+    if (windows[window].create_func) {
+        windows[window].obj = windows[window].create_func();
+    }
+
     lv_obj_set_grid_cell(windows[window].obj, LV_GRID_ALIGN_STRETCH, 0, 1, LV_GRID_ALIGN_STRETCH, 0, 1);
 }
 

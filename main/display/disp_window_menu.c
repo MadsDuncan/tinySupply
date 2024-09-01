@@ -1,5 +1,8 @@
 #include "disp_internal.h"
 
+/************************************************
+ *      Generic helpers
+ ***********************************************/
 static lv_obj_t* create_menu_item_name(lv_obj_t *parent, const char *icon, const char *name) {
     lv_obj_t *obj = lv_menu_cont_create(parent);
 
@@ -17,6 +20,19 @@ static lv_obj_t* create_menu_item_name(lv_obj_t *parent, const char *icon, const
     return obj;
 }
 
+static lv_obj_t* create_menu_btn(lv_obj_t *parent, const char *name, const char *text, lv_event_cb_t event_cb) {
+    lv_obj_t *obj = create_menu_item_name(parent, NULL, name);
+    lv_obj_t *btn = lv_btn_create(obj);
+    lv_obj_t *label = lv_label_create(btn);
+    lv_label_set_text(label, text);
+    lv_obj_add_event_cb(btn, event_cb, LV_EVENT_SHORT_CLICKED, NULL);
+
+    return btn;
+}
+
+/************************************************
+ *      Specific helpers
+ ***********************************************/
 static void menu_window_dropdown_cb(lv_event_t *event) {
     lv_obj_t * dd = lv_event_get_target(event);
 
@@ -47,22 +63,30 @@ static lv_obj_t* create_menu_window_dropdown(lv_obj_t *parent) {
     lv_obj_add_event_cb(dd, obj_select_cb, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(dd, menu_window_dropdown_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
-
     return dd;
 }
 
+static void menu_clear_graph_btn_cb(lv_event_t *event) {
+    clear_graph();
+}
+
+/************************************************
+ *      Public functions
+ ***********************************************/
 lv_obj_t* create_menu_window() {
     lv_obj_t *menu = lv_menu_create(scr);
     lv_obj_t *main_page = lv_menu_page_create(menu, NULL);
 
     lv_obj_t *section = lv_menu_section_create(main_page);
     lv_obj_t *window_dropdown = create_menu_window_dropdown(section);
+    lv_obj_t *clear_graph_btn = create_menu_btn(section, "Clear graph", "Clear", menu_clear_graph_btn_cb);
 
     lv_menu_set_page(menu, main_page);
 
     lv_group_remove_all_objs(group); // Clear objects from previous window
     lv_group_add_obj(group, btn_menu);
     lv_group_add_obj(group, window_dropdown);
+    lv_group_add_obj(group, clear_graph_btn);
     lv_indev_set_group(indev_encoder, group);
 
     return menu;

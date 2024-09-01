@@ -18,9 +18,12 @@
 #define MS_PER_H  (MS_PER_M * 60)
 
 static lv_obj_t *graph;
-static lv_chart_series_t *graph_series_v;
-static lv_chart_series_t *graph_series_i;
-static bool graph_ready = false;
+static lv_chart_series_t *series_v;
+static lv_chart_series_t *series_i;
+static lv_coord_t series_v_points[GRAPH_X_POINTS] = {[0 ... (GRAPH_X_POINTS)-1] = LV_CHART_POINT_NONE};
+static lv_coord_t series_i_points[GRAPH_X_POINTS] = {[0 ... (GRAPH_X_POINTS)-1] = LV_CHART_POINT_NONE};
+static bool window_ready = false;
+static uint32_t current_point = 0;
 static uint32_t graph_start_time = 0;
 
 static void graph_draw_cb(lv_event_t * event) {
@@ -109,8 +112,6 @@ static void graph_draw_cb(lv_event_t * event) {
 }
 
 lv_obj_t* create_graph_window() {
-    graph_ready = false;
-
     lv_obj_t *window = lv_obj_create(scr);
 
     graph = lv_chart_create(window);
@@ -130,10 +131,10 @@ lv_obj_t* create_graph_window() {
     lv_chart_set_axis_tick(graph, LV_CHART_AXIS_PRIMARY_Y, GRAPH_Y_V_DIVISIONS, 0, GRAPH_Y_V_DIVISIONS, 3, true, 40);
     lv_chart_set_axis_tick(graph, LV_CHART_AXIS_SECONDARY_Y, GRAPH_Y_I_DIVISIONS, 0, GRAPH_Y_I_DIVISIONS, 2, true, 40);
 
-    graph_series_v = lv_chart_add_series(graph, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
-    graph_series_i = lv_chart_add_series(graph, lv_palette_main(LV_PALETTE_BLUE), LV_CHART_AXIS_SECONDARY_Y);
-
-    graph_ready = true;
+    series_v = lv_chart_add_series(graph, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
+    series_i = lv_chart_add_series(graph, lv_palette_main(LV_PALETTE_BLUE), LV_CHART_AXIS_SECONDARY_Y);
+    lv_chart_set_ext_y_array(graph, series_v, series_v_points);
+    lv_chart_set_ext_y_array(graph, series_i, series_i_points);
 
     static lv_coord_t graph_grid_col[] = {40, LV_GRID_FR(1), 40, LV_GRID_TEMPLATE_LAST};
     static lv_coord_t graph_grid_row[] = {15, LV_GRID_FR(1), 45, LV_GRID_TEMPLATE_LAST};
@@ -145,25 +146,34 @@ lv_obj_t* create_graph_window() {
     lv_group_add_obj(group, btn_menu);
     lv_indev_set_group(indev_encoder, group);
 
+    window_ready = true;
     return window;
 }
 
-void add_graph_point(uint32_t v, uint32_t i) {
-    static uint32_t current_point = 0;
+void remove_graph_window() {
+    window_ready = false;
+}
 
-    if (!graph_ready) {
-        return;
+void clear_graph() {
+    for (uint32_t i = 0; i < GRAPH_X_POINTS; i++) {
+        series_v_points[i] = LV_CHART_POINT_NONE;
+        series_i_points[i] = LV_CHART_POINT_NONE;
     }
 
-    if (current_point == (GRAPH_X_POINTS)) {
+    current_point = 0;
+    graph_start_time = 0;
+}
+
+void add_graph_point(uint32_t v, uint32_t i) {
+    if (current_point == GRAPH_X_POINTS) {
 
         for (uint32_t i = 0; i < GRAPH_X_POINTS; i++) {
             if (i < GRAPH_X_POINTS - (GRAPH_X_CLEAR_POINTS)) {
-                graph_series_v->y_points[i] = graph_series_v->y_points[i + (GRAPH_X_CLEAR_POINTS)];
-                graph_series_i->y_points[i] = graph_series_i->y_points[i + (GRAPH_X_CLEAR_POINTS)];
+                series_v_points[i] = series_v_points[i + (GRAPH_X_CLEAR_POINTS)];
+                series_i_points[i] = series_i_points[i + (GRAPH_X_CLEAR_POINTS)];
             } else {
-                graph_series_v->y_points[i] = LV_CHART_POINT_NONE;
-                graph_series_i->y_points[i] = LV_CHART_POINT_NONE;
+                series_v_points[i] = LV_CHART_POINT_NONE;
+                series_i_points[i] = LV_CHART_POINT_NONE;
             }
         }
 
@@ -171,10 +181,12 @@ void add_graph_point(uint32_t v, uint32_t i) {
         graph_start_time += GRAPH_X_CLEAR_TIME;
     }
 
-    graph_series_v->y_points[current_point] = v;
-    graph_series_i->y_points[current_point] = i;
+    series_v_points[current_point] = v;
+    series_i_points[current_point] = i;
 
     current_point++;
 
-    lv_chart_refresh(graph);
+    if (window_ready) {
+        lv_chart_refresh(graph);
+    }
 }

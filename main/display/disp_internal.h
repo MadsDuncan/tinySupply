@@ -6,6 +6,7 @@
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "lvgl.h"
+#include "psu.h"
 #include "sdkconfig.h"
 #include <stdint.h>
 
@@ -14,10 +15,6 @@
 /************************************************
  *      Common
  ***********************************************/
-#define V_MAX         25000 // Max voltage in mV
-#define I_MAX         1500  // Max current in mA
-#define SAMPLE_PERIOD 500   // Measurement sample rate in ms
-
 #define COLOR_BLACK   lv_color_hex(0x000000)
 #define COLOR_RED     lv_color_hex(0xff0000)
 #define COLOR_GREEN   lv_color_hex(0x00ff00)

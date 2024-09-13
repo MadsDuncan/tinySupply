@@ -1,4 +1,4 @@
-#include "esp_random.h"
+#include "usb_pd.h"
 #include <string.h>
 
 #include "display.h"
@@ -34,43 +34,6 @@ lv_obj_t *view_pd_v_label;
 // Group related
 lv_group_t *group;
 lv_obj_t *btn_menu;
-
-static void app_cb() {
-    switch (esp_random() % 6) {
-        case 0: lv_label_set_text(view_pd_v_label, "PD 5V"); break;
-        case 1: lv_label_set_text(view_pd_v_label, "PD 9V"); break;
-        case 2: lv_label_set_text(view_pd_v_label, "PD 12V"); break;
-        case 3: lv_label_set_text(view_pd_v_label, "PD 15V"); break;
-        case 4: lv_label_set_text(view_pd_v_label, "PD 18V"); break;
-        case 5: lv_label_set_text(view_pd_v_label, "PD 20V"); break;
-    }
-#if 1
-    static uint32_t v = 0;
-    static uint32_t i = 0;
-    v += V_MAX/200;
-    i += (I_MAX/200)*0.8;
-    if (v > V_MAX) {
-        v = 0;
-        i = 0;
-    }
-#else
-    uint32_t v = esp_random() % V_MAX; // Voltage in mV
-    uint32_t i = esp_random() % I_MAX; // Current in mA
-#endif
-
-    uint32_t p = (v * i) / 1000; // Power in mW
-    bool const_i = (esp_random() % 2) ? true : false;
-
-    add_graph_point(v, i);
-
-    switch (active_window) {
-        case WINDOW_VIEW:
-            update_view(v, i, p, const_i);
-            break;
-        default:
-            break;
-    }
-}
 
 static void create_common_styles() {
     lv_style_init(&style_view_base);
@@ -289,7 +252,30 @@ void display_start_app() {
     // Show view window initially
     set_window(WINDOW_VIEW);
 
-    lv_timer_t *timer = lv_timer_create(app_cb, SAMPLE_PERIOD, NULL);
+    xSemaphoreGive(lv_task_sema);
+}
+
+void display_update(uint32_t v, uint32_t i, bool const_i, uint8_t pd_v) {
+    if (xSemaphoreTake(lv_task_sema, portMAX_DELAY) != pdTRUE) {
+        ESP_LOGE(TAG, "Display semaphore not free\n");
+        return;
+    }
+
+    switch (pd_v) {
+        case USB_PD_5V:  lv_label_set_text(view_pd_v_label, "PD 5V"); break;
+        case USB_PD_9V:  lv_label_set_text(view_pd_v_label, "PD 9V"); break;
+        case USB_PD_12V: lv_label_set_text(view_pd_v_label, "PD 12V"); break;
+        case USB_PD_15V: lv_label_set_text(view_pd_v_label, "PD 15V"); break;
+        case USB_PD_18V: lv_label_set_text(view_pd_v_label, "PD 18V"); break;
+        case USB_PD_20V: lv_label_set_text(view_pd_v_label, "PD 20V"); break;
+    }
+
+    if (active_window == WINDOW_VIEW) {
+        uint32_t p = (v * i) / 1000; // Power in mW
+        update_view(v, i, p, const_i);
+    }
+
+    add_graph_point(v, i);
 
     xSemaphoreGive(lv_task_sema);
 }

@@ -1,5 +1,7 @@
-#include "disp_internal.h"
 #include <string.h>
+
+#include "display.h"
+#include "disp_internal.h"
 
 #define GRAPH_X_DIVISIONS       11
 #define GRAPH_Y_V_DIVISIONS     6
@@ -7,7 +9,7 @@
 
 #define GRAPH_X_POINTS          1000
 #define GRAPH_X_DIVISION_POINTS (GRAPH_X_POINTS / (GRAPH_X_DIVISIONS - 1)) // Points between divisions in ms
-#define GRAPH_X_DIVISION_TIME   (GRAPH_X_DIVISION_POINTS * SAMPLE_PERIOD)  // Time between divisions in ms
+#define GRAPH_X_DIVISION_TIME   (GRAPH_X_DIVISION_POINTS * DISPLAY_UPDATE_PERIOD)  // Time between divisions in ms
 #define GRAPH_X_CLEAR_DIVISIONS 4
 #define GRAPH_X_CLEAR_POINTS    (GRAPH_X_CLEAR_DIVISIONS * GRAPH_X_DIVISION_POINTS)
 #define GRAPH_X_CLEAR_TIME      (GRAPH_X_CLEAR_DIVISIONS * GRAPH_X_DIVISION_TIME)
